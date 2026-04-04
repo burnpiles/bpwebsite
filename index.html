@@ -235,11 +235,12 @@
     }
 
     /* Hero background image — GIF only behind the divisions panels */
+    /* Controlled via --divisions-bg CSS var set by JS from admin; defaults to bundled GIF */
     .hero-divisions::before {
       content: '';
       position: absolute; inset: 0;
       z-index: 0;
-      background: url('media/bpbackground.gif') center/cover no-repeat;
+      background: var(--divisions-bg, url('media/bpbackground.gif') center/cover no-repeat);
     }
     .hero-divisions::after {
       content: '';
@@ -2381,16 +2382,12 @@
       });
     }
 
-    // Hero background image
-    if (cfg.heroBg) {
-      const heroBg = document.getElementById('hero-bg');
-      if (heroBg) {
-        const img = document.createElement('img');
-        img.src = cfg.heroBg;
-        img.alt = '';
-        img.loading = 'eager';
-        heroBg.appendChild(img);
-      }
+    // Hero divisions background — set CSS var; empty string = remove GIF
+    if (cfg.heroBg !== undefined) {
+      document.documentElement.style.setProperty(
+        '--divisions-bg',
+        cfg.heroBg ? `url('${cfg.heroBg}') center/cover no-repeat` : 'none'
+      );
     }
 
     // Social share image
@@ -2429,12 +2426,12 @@
       if (s.calendly_url) {
         document.querySelectorAll('a[href*="calendly.com"]').forEach(a => a.href = s.calendly_url);
       }
-      // Hero background
-      if (s.hero_bg) {
-        const bg = document.getElementById('hero-bg');
-        if (bg && !bg.querySelector('img[src*="' + s.hero_bg.slice(-20) + '"]')) {
-          bg.innerHTML = `<img src="${s.hero_bg}" alt="" loading="eager">`;
-        }
+      // Hero divisions background — update CSS var; empty = remove GIF
+      if ('hero_bg' in s) {
+        document.documentElement.style.setProperty(
+          '--divisions-bg',
+          s.hero_bg ? `url('${s.hero_bg}') center/cover no-repeat` : 'none'
+        );
       }
       // Origin image
       if (s.origin_image) {
