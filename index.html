@@ -603,7 +603,12 @@
       .hdiv-name { font-size: 1.6rem; }
       .hdiv-purpose { margin-top: 0; font-size: 0.55rem; }
       .hdiv-desc {
-        display: none;
+        display: block;
+        font-size: 0.6rem;
+        line-height: 1.45;
+        margin-top: 0.15rem;
+        opacity: 0.7;
+        flex-basis: 100%; /* forces its own line in the flex row */
       }
       .hdiv-pricing { display: none; }
       /* Hero fills mobile viewport — accounts for iOS browser chrome */
@@ -2415,7 +2420,7 @@
     if (cfg.originImage) {
       const originMedia = document.querySelector('.origin-media');
       if (originMedia) {
-        originMedia.innerHTML = `<img src="${cfg.originImage}" alt="Origin Story" style="width:100%;height:100%;object-fit:cover;display:block">`;
+        originMedia.innerHTML = `<img src="${cfg.originImage}" alt="Origin Story" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">`;
       }
     }
 
@@ -2449,7 +2454,7 @@
       // Origin image
       if (s.origin_image) {
         const om = document.querySelector('.origin-media');
-        if (om) om.innerHTML = `<img src="${s.origin_image}" alt="Origin Story" style="width:100%;height:100%;object-fit:cover;display:block">`;
+        if (om) om.innerHTML = `<img src="${s.origin_image}" alt="Origin Story" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">`;
       }
       // Social links
       document.querySelectorAll('.footer-social a').forEach(a => {
@@ -2480,11 +2485,7 @@
         document.querySelectorAll('.hero-sub').forEach(el => el.textContent = s.hero_sub);
       }
       if (s.hero_cta) {
-        document.querySelectorAll('a.hero-cta').forEach(el => {
-          // preserve the arrow if not included
-          const arrow = el.textContent.includes('→') && !s.hero_cta.includes('→') ? ' →' : '';
-          el.textContent = s.hero_cta + arrow;
-        });
+        document.querySelectorAll('a.hero-cta').forEach(el => el.textContent = s.hero_cta);
       }
       // Service cards — Flint
       if (s.flint_purpose) document.querySelectorAll('[data-div="flint"] .hdiv-purpose').forEach(el => el.textContent = s.flint_purpose);
@@ -2520,6 +2521,8 @@
       if (s.meta_og_title) {
         const m = document.querySelector('meta[property="og:title"]');
         if (m) m.content = s.meta_og_title;
+        // Also update the browser tab title
+        document.title = s.meta_og_title;
       }
       if (s.meta_og_desc) {
         const m = document.querySelector('meta[property="og:description"]');
@@ -2780,8 +2783,14 @@
       }
     }));
 
+    // Pause hero embers when hero is off-screen (same pattern as work section)
+    let heroRunning = true;
+    new IntersectionObserver((entries) => {
+      entries.forEach(e => { heroRunning = e.isIntersecting; });
+    }, { threshold: 0.05 }).observe(heroEl);
+
     (function heroEmberLoop() {
-      heroEmber.tick();
+      if (heroRunning) heroEmber.tick();
       requestAnimationFrame(heroEmberLoop);
     }());
 
@@ -3109,9 +3118,9 @@
       card.setAttribute('tabindex', '0');
       card.setAttribute('aria-label', p.title + ' — ' + p.client);
 
-      // Use thumb as background image on the whole card
+      // Lazy-load thumb as background image — set data-thumb, load on intersection
       if (p.thumb) {
-        card.style.backgroundImage = `url(${p.thumb})`;
+        card.setAttribute('data-thumb', p.thumb);
         card.setAttribute('data-bg', '1');
       }
 
@@ -3129,6 +3138,18 @@
       });
       grid.appendChild(card);
     });
+
+    // Lazy-load card background images when they scroll into view
+    const thumbObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const thumb = e.target.getAttribute('data-thumb');
+          if (thumb) e.target.style.backgroundImage = `url(${thumb})`;
+          thumbObserver.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: '200px' });
+    grid.querySelectorAll('[data-thumb]').forEach(c => thumbObserver.observe(c));
   }());
 
   // ---- Modal ----
@@ -3650,14 +3671,23 @@
   async function runStep3() {
     showStep('step-3');
     const wrap = document.getElementById('summary-wrap');
+    const nameBtn = document.getElementById('route-badge-name');
+    // Show pulse loading state while AI confirms route
+    nameBtn.textContent = '···';
+    nameBtn.style.opacity = '0.45';
+    nameBtn.style.pointerEvents = 'none';
     wrap.classList.add('in');
 
     try {
       const result = await fetchSummary();
       const finalRoute = result.division || suggestedRoute || 'Flint';
+      nameBtn.style.opacity = '';
+      nameBtn.style.pointerEvents = '';
       showResult(finalRoute);
       postIntake(result.triageLabel).catch(() => {});
     } catch (err) {
+      nameBtn.style.opacity = '';
+      nameBtn.style.pointerEvents = '';
       showResult(suggestedRoute || 'Flint');
       console.error('Summary error:', err);
     }
