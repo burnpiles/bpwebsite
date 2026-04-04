@@ -3406,13 +3406,15 @@
     }
     document.body.classList.add('splash-active');
 
-    // Force canvas dimensions — use fallbacks for Safari/iPad
-    const W = document.documentElement.clientWidth || window.innerWidth || screen.width || 1024;
-    const H = document.documentElement.clientHeight || window.innerHeight || screen.height || 768;
-    splashCanvas.width = W;
-    splashCanvas.height = H;
+    // Set canvas to fill splash container — defer to get actual size
     splashCanvas.style.width = '100%';
     splashCanvas.style.height = '100%';
+    // Use rAF to ensure layout has happened before reading dimensions
+    requestAnimationFrame(() => {
+    const W = splashCanvas.offsetWidth || window.innerWidth || screen.width || 1024;
+    const H = splashCanvas.offsetHeight || window.innerHeight || screen.height || 768;
+    splashCanvas.width = W;
+    splashCanvas.height = H;
     const ctx = splashCanvas.getContext('2d');
 
     // Create a dedicated splash ember system — fewer on mobile for performance
@@ -3540,6 +3542,7 @@
         splash.style.display = 'none';
       }, 800);
     }, 2800);
+    }); // end requestAnimationFrame
   })();
 
   /* ---- Save submission locally + POST to /api/intake ---- */
