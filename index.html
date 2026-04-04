@@ -339,11 +339,13 @@
       border-color: var(--accent);
     }
 
+    .hero-model-btn-wrap {
+      background: var(--bg);
+      position: relative; z-index: 2;
+      text-align: center;
+      padding: clamp(0.8rem, 1.5vh, 1.2rem) 0;
+    }
     .hero-model-btn {
-      margin-top: clamp(1rem, 2vh, 2rem);
-      margin-bottom: clamp(1rem, 2vh, 1.5rem);
-      position: relative;
-      z-index: 2;
       background: #0c0b09 !important;
       color: var(--accent-bright) !important;
       border-color: var(--accent) !important;
@@ -381,6 +383,10 @@
     .divisions-head {
       padding: clamp(1.5rem, 3vh, 2.5rem) clamp(1.5rem, 5vw, 4rem) 0;
       position: relative; z-index: 1;
+      background: var(--bg);
+      /* Extend solid bg upward to cover gap above Our Services */
+      margin-top: -1px;
+      box-shadow: 0 -60px 0 0 var(--bg);
     }
 
     .hero-divisions {
@@ -388,6 +394,7 @@
       grid-template-columns: 1fr 1fr 1fr;
       border-top: 1px solid var(--border);
       position: relative; z-index: 1;
+      background: var(--bg);
     }
 
     .hdiv {
@@ -1899,7 +1906,7 @@
   <section id="hero" aria-labelledby="hero-title">
     <div class="hero-bg" id="hero-bg"><img src="bpbackground.gif" alt="" loading="eager"></div>
 
-    <div class="wrap hero-top" style="position:relative;z-index:1">
+    <div class="wrap hero-top" style="position:relative;z-index:1;">
       <p class="hero-eyebrow">Burn the noise. Keep the signal.</p>
       <h1 class="hero-wordmark" id="hero-title">Burnpiles</h1>
       <a href="#intake" class="hero-cta">How can we help? →</a>
@@ -1943,7 +1950,9 @@
 
     </div>
 
-    <a href="#flywheel" class="anchor-btn hero-model-btn">Our Model ↓</a>
+    <div class="hero-model-btn-wrap">
+      <a href="#flywheel" class="anchor-btn hero-model-btn">Our Model ↓</a>
+    </div>
 
   </section>
 
