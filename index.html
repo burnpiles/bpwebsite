@@ -831,7 +831,7 @@
     .dmod-label {
       font-family: var(--font-mono);
       font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--text); opacity: 0.75; display: block; margin-bottom: 0.5rem;
+      color: var(--text); display: block; margin-bottom: 0.5rem;
     }
     .dmod-name {
       font-family: var(--font-display);
@@ -2376,7 +2376,7 @@
       label: 'Ideation',
       name: 'Flint',
       nameAccent: false,
-      tagline: 'We train you. We discuss blockers. You walk away like Tony Stark.',
+      tagline: 'We train you. We discuss blockers.\nYou walk away like Tony Stark.',
       about: "Flint is a focused ideation session. You bring the questions, the blockers, the half-formed ideas — we pressure-test them together. You leave with clarity and direction. No deck required, no homework ahead of time.",
       services: [
         'Strategy & ideation sessions',
@@ -2440,7 +2440,7 @@
     // Match card orange tiers: flint=1, forge=2, fuel=3
     const orangeMap = { flint: 'orange-1', forge: 'orange-2', fuel: 'orange-3' };
     nameEl.className = 'dmod-name ' + (orangeMap[divKey] || '');
-    document.getElementById('dmod-tagline').textContent   = d.tagline;
+    document.getElementById('dmod-tagline').innerHTML = d.tagline.replace(/\n/g, '<br>');
 
     document.getElementById('dmod-prices').innerHTML = d.pricing
       .map(p => `
