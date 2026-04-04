@@ -558,9 +558,17 @@
        PORTFOLIO / WORK
        ========================================= */
     #work {
-      padding: clamp(5rem, 10vh, 9rem) 0;
+      padding: clamp(3rem, 5vh, 5rem) 0;
+      min-height: 100dvh; min-height: 100vh;
+      display: flex; align-items: center;
+      box-sizing: border-box;
       background: var(--surface);
       background-image: radial-gradient(ellipse at 30% 0%, rgba(196, 87, 26, 0.02) 0%, transparent 50%);
+    }
+    #work > .wrap {
+      flex: 1;
+      display: flex; flex-direction: column;
+      justify-content: center;
     }
 
     .work-head { margin-bottom: clamp(3rem, 6vh, 5rem); }
@@ -912,8 +920,16 @@
        ========================================= */
     #flywheel {
       padding: clamp(2.5rem, 5vh, 4rem) 0;
+      min-height: 100dvh; min-height: 100vh;
+      display: flex; align-items: center;
+      box-sizing: border-box;
       background: #f0ebe3;
       color: #1a1812;
+    }
+    #flywheel > .wrap {
+      flex: 1;
+      display: flex; flex-direction: column;
+      justify-content: center;
     }
 
     .flywheel-head {
@@ -1161,9 +1177,17 @@
        ORIGIN
        ========================================= */
     #origin {
-      padding: clamp(4rem, 8vh, 6rem) 0;
+      padding: clamp(3rem, 5vh, 5rem) 0;
+      min-height: 100dvh; min-height: 100vh;
+      display: flex; align-items: center;
+      box-sizing: border-box;
       background: #f0ebe3;
       color: #1a1812;
+    }
+    #origin > .wrap {
+      flex: 1;
+      display: flex; flex-direction: column;
+      justify-content: center;
     }
     #origin .label { color: var(--accent); }
     .origin-layout {
@@ -2084,6 +2108,7 @@
         </blockquote>
       </div>
     </div>
+    <a href="#newsletter" class="anchor-btn anchor-btn--light" style="margin-top:2rem">Stay in the loop ↓</a>
   </div>
 </section>
 
