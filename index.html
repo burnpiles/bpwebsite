@@ -1102,14 +1102,13 @@
     .path-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
     .path-result {
-      margin-top: 1.8rem;
-      min-height: 4rem;
+      margin-top: 1rem;
     }
     .path-answer {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      padding: 1.4rem 1.6rem;
+      padding: 1.2rem 1.4rem;
       background: #fff;
       border: 1px solid rgba(26, 24, 18, 0.12);
       animation: fadeUp 0.35s var(--ease-out) forwards;
@@ -2537,6 +2536,8 @@
           <p class="path-answer-text">${ans.text}</p>
           <a href="#intake" class="path-answer-cta">What can we build? →</a>
         </div>`;
+      // Scroll answer into view
+      setTimeout(() => pathResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
     });
   });
 
@@ -2797,6 +2798,17 @@
   );
   document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
   document.querySelectorAll('.hdiv').forEach(el => ro.observe(el));
+
+  /* ---- Anchor smooth scroll (force JS scroll for all hash links) ---- */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
 
   /* ---- Hero parallax ---- */
   const heroTop = document.querySelector('.hero-top');
