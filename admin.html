@@ -449,6 +449,7 @@
       <button class="nav-item" data-page="services">Services</button>
       <button class="nav-item" data-page="portfolio">Portfolio</button>
       <button class="nav-item" data-page="story">Story</button>
+      <button class="nav-item" data-page="intake">Intake</button>
       <button class="nav-item" data-page="branding">Branding</button>
       <div class="nav-divider"></div>
       <div class="nav-section">Data</div>
@@ -757,6 +758,31 @@
         </div>
       </div>
 
+      <!-- ==================== INTAKE ==================== -->
+      <div class="page" id="page-intake">
+        <h2 class="section-title">Intake Form</h2>
+        <p class="section-desc">The result screen copy — what visitors see after answering the triage questions.</p>
+
+        <div class="card">
+          <span class="card-label">Result Screen</span>
+          <div class="field-group">
+            <label class="field-label" for="intake-result-body">RESULT BODY TEXT</label>
+            <textarea id="intake-result-body" class="field-input field-textarea" rows="3" placeholder="The next step is a 30-minute call. No deck, no prep — just a real conversation about what you need."></textarea>
+            <span class="field-hint">Paragraph shown below the route badge on the result screen.</span>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="intake-cta-text">CTA BUTTON LABEL</label>
+            <input id="intake-cta-text" type="text" class="field-input" placeholder="Book a call →">
+            <span class="field-hint">Text on the primary call-to-action button. Links to your Calendly URL.</span>
+          </div>
+        </div>
+
+        <div class="save-bar">
+          <span class="save-bar-note">Changes apply on next page load.</span>
+          <button class="btn btn-primary" onclick="saveIntake()">Save intake</button>
+        </div>
+      </div>
+
       <!-- ==================== SUBMISSIONS ==================== -->
       <div class="page" id="page-submissions">
         <h2 class="section-title">Form Submissions</h2>
@@ -843,7 +869,9 @@
     metaDesc:      '',
     metaOgTitle:   '',
     metaOgDesc:    '',
-    newsletterBg:  '',
+    newsletterBg:      '',
+    intakeResultBody:  '',
+    intakeCtaText:     '',
     social: {
       instagram: 'https://instagram.com/burnpiles',
       x:         'https://x.com/burnpiles',
@@ -965,7 +993,9 @@
       metaDesc:      s.meta_description || '',
       metaOgTitle:   s.meta_og_title    || '',
       metaOgDesc:    s.meta_og_desc     || '',
-      newsletterBg:  s.newsletter_bg    || '',
+      newsletterBg:     s.newsletter_bg      || '',
+      intakeResultBody: s.intake_result_body || '',
+      intakeCtaText:    s.intake_cta_text    || '',
       social: {
         instagram: s.social_instagram || DEFAULTS.social.instagram,
         x: s.social_x || DEFAULTS.social.x,
@@ -1008,7 +1038,9 @@
       { key: 'meta_description',value: cfg.metaDesc        || '' },
       { key: 'meta_og_title',   value: cfg.metaOgTitle     || '' },
       { key: 'meta_og_desc',    value: cfg.metaOgDesc      || '' },
-      { key: 'newsletter_bg',   value: cfg.newsletterBg    || '' },
+      { key: 'newsletter_bg',      value: cfg.newsletterBg     || '' },
+      { key: 'intake_result_body', value: cfg.intakeResultBody || '' },
+      { key: 'intake_cta_text',    value: cfg.intakeCtaText    || '' },
       { key: 'social_instagram', value: cfg.social?.instagram || '' },
       { key: 'social_x', value: cfg.social?.x || '' },
       { key: 'social_linkedin', value: cfg.social?.linkedin || '' },
@@ -1139,9 +1171,11 @@
     _g('svc-fuel-purpose').value    = cfg.fuelPurpose     || '';
     _g('svc-fuel-desc').value       = cfg.fuelDesc        || '';
     _g('svc-fuel-pricing').value    = cfg.fuelPricing     || '';
-    _g('story-heading').value       = cfg.originHeading   || '';
-    _g('story-body').value          = cfg.originBody      || '';
-    _g('s-newsletter-bg').value     = cfg.newsletterBg    || '';
+    _g('story-heading').value         = cfg.originHeading    || '';
+    _g('story-body').value            = cfg.originBody       || '';
+    _g('s-newsletter-bg').value       = cfg.newsletterBg     || '';
+    _g('intake-result-body').value    = cfg.intakeResultBody || '';
+    _g('intake-cta-text').value       = cfg.intakeCtaText    || '';
   }
 
   /* ============================================================ SETTINGS */
@@ -1213,6 +1247,13 @@
     cfg.originBody    = document.getElementById('story-body').value.trim();
     saveConfig();
     toast('Origin story saved.', 'success');
+  }
+
+  function saveIntake() {
+    cfg.intakeResultBody = document.getElementById('intake-result-body').value.trim();
+    cfg.intakeCtaText    = document.getElementById('intake-cta-text').value.trim();
+    saveConfig();
+    toast('Intake copy saved.', 'success');
   }
 
   /* ============================================================ PORTFOLIO */

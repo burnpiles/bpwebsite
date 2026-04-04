@@ -657,8 +657,7 @@
       .card-body { padding: 0.8rem 1rem; }
       .card-type { font-size: 0.5rem; }
       .card-title { font-size: 0.9rem; }
-      .card-client { font-size: 0.65rem; }
-      .card-year { font-size: 0.55rem; padding-top: 0.3rem; }
+      .card-attrib { font-size: 0.6rem; padding-top: 0.3rem; }
 
       /* Flywheel — tight side-by-side on mobile */
       #flywheel .wrap { padding-left: 0.8rem; padding-right: 0.8rem; }
@@ -807,14 +806,14 @@
       font-weight: 400; letter-spacing: -0.01em; line-height: 1.2;
       color: var(--text); margin-top: 0.25rem;
     }
-    .card-client {
+    .card-attrib {
       font-family: var(--font-body);
-      font-size: 0.84rem; color: var(--text);
-    }
-    .card-year {
-      font-family: var(--font-body);
-      font-size: 0.74rem; color: var(--text);
-      margin-top: auto; padding-top: 0.6rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-top: auto;
+      padding-top: 0.6rem;
+      opacity: 0.85;
     }
 
     /* ---- Work Modal ---- */
@@ -2530,6 +2529,15 @@
         const m = document.querySelector('meta[property="og:description"]');
         if (m) m.content = s.meta_og_desc;
       }
+      // Intake result copy
+      if (s.intake_result_body) {
+        const el = document.querySelector('.result-next');
+        if (el) el.textContent = s.intake_result_body;
+      }
+      if (s.intake_cta_text) {
+        const el = document.getElementById('result-calendly');
+        if (el) el.textContent = s.intake_cta_text;
+      }
       // Newsletter section background
       if ('newsletter_bg' in s) {
         const nl = document.getElementById('newsletter');
@@ -3126,12 +3134,12 @@
         card.setAttribute('data-bg', '1');
       }
 
+      const attrib = [p.client, p.year].filter(Boolean).map(esc).join(' · ');
       card.innerHTML = `
         <div class="card-body">
           <span class="card-type">${esc(p.type)}</span>
           <h3 class="card-title">${esc(p.title)}</h3>
-          <p class="card-client">${esc(p.client)}</p>
-          <span class="card-year">${esc(p.year)}</span>
+          ${attrib ? `<span class="card-attrib">${attrib}</span>` : ''}
         </div>`;
 
       card.addEventListener('click', () => openWorkModal(p));
@@ -3791,7 +3799,7 @@
     });
   }
 
-  /* ---- Splash screen ---- */
+  /* ---- Splash screen — uses shared EmberSystem class ---- */
   (function initSplash() {
     const splash = document.getElementById('splash');
     const splashCanvas = document.getElementById('splash-canvas');
@@ -3801,145 +3809,36 @@
       return;
     }
     document.body.classList.add('splash-active');
-
-    // Set canvas to fill splash container
     splashCanvas.style.width = '100vw';
     splashCanvas.style.height = '100vh';
-    // Defer to get actual size after layout
+
     requestAnimationFrame(() => {
-    const W = Math.max(splashCanvas.clientWidth, window.innerWidth, screen.width) || 1024;
-    const H = Math.max(splashCanvas.clientHeight, window.innerHeight, screen.height) || 768;
-    splashCanvas.width = W;
-    splashCanvas.height = H;
-    const ctx = splashCanvas.getContext('2d');
+      const W = window.innerWidth, H = window.innerHeight;
+      const isMobile = W < 768, isTablet = W >= 768 && W < 1200;
 
-    // Create a dedicated splash ember system — fewer on mobile for performance
-    const isMobile = W < 768;
-    const isTablet = W >= 768 && W < 1200;
-    const splashCfg = {
-      count: isMobile ? 80 : isTablet ? 150 : 400, speedMult: 1.6,
-      glowColor: 'rgba(240, 100, 20, 0.9)',
-      glowMid: 'rgba(220, 75, 15, 0.45)',
-      coreColor: 'rgba(255, 220, 110, 1)',
-      oscAmp: 0.5,
-      flameHeight: 0.5,
-      flameIntensity: 1.0,
-    };
-
-    // Spawn embers
-    function spawnEmber(scattered) {
-      return {
-        x: Math.random() * W,
-        y: scattered ? Math.random() * H : H + 10 + Math.random() * 20,
-        r: Math.random() * 1.5 + 0.4,
-        vy: -(Math.random() * 0.55 + 0.2) * splashCfg.speedMult,
-        vx: (Math.random() - 0.5) * 0.25,
-        osc: Math.random() * Math.PI * 2,
-        oSpd: Math.random() * 0.025 + 0.008,
-        oscAmp: splashCfg.oscAmp,
-        alp: Math.random() * 0.55 + 0.2,
-        life: 0,
-        max: Math.random() * 240 + 100,
-        curAlp: 0,
-      };
-    }
-
-    const embers = Array.from({ length: splashCfg.count }, () => {
-      const e = spawnEmber(true);
-      e.life = Math.random() * e.max;
-      return e;
-    });
-
-    let splashTime = 0;
-    let splashRunning = true;
-
-    function splashTick() {
-      if (!splashRunning) return;
-      ctx.clearRect(0, 0, W, H);
-
-      // Flame glow layers
-      splashTime += 0.015;
-      const fH = H * splashCfg.flameHeight;
-      const intensity = splashCfg.flameIntensity;
-
-      // Layer 1: deep base heat
-      const g1 = ctx.createLinearGradient(0, H, 0, H - fH);
-      g1.addColorStop(0, `rgba(140, 40, 5, ${0.22 * intensity})`);
-      g1.addColorStop(0.35, `rgba(120, 30, 3, ${0.08 * intensity})`);
-      g1.addColorStop(1, 'rgba(100, 20, 2, 0)');
-      ctx.fillStyle = g1;
-      ctx.fillRect(0, H - fH, W, fH);
-
-      // Layer 2: mid glow
-      const midH = fH * (0.55 + 0.12 * Math.sin(splashTime * 0.8));
-      const g2 = ctx.createLinearGradient(0, H, 0, H - midH);
-      g2.addColorStop(0, `rgba(190, 65, 10, ${0.18 * intensity})`);
-      g2.addColorStop(0.3, `rgba(170, 50, 8, ${0.1 * intensity})`);
-      g2.addColorStop(1, 'rgba(150, 40, 5, 0)');
-      ctx.fillStyle = g2;
-      ctx.fillRect(0, H - midH, W, midH);
-
-      // Layer 3: hot spots
-      for (let i = 0; i < 8; i++) {
-        const seed = i * 7.31;
-        const cx = W * ((i + 0.5) / 8) + Math.sin(splashTime * 0.6 + seed) * (W * 0.03);
-        const cy = H - fH * 0.05;
-        const spotR = fH * (0.25 + 0.15 * Math.sin(splashTime * (0.5 + i * 0.13) + seed));
-        const spotAlpha = (0.08 + 0.05 * Math.sin(splashTime * (0.7 + i * 0.1) + seed)) * intensity;
-        const g3 = ctx.createRadialGradient(cx, cy, 0, cx, cy, spotR);
-        g3.addColorStop(0, `rgba(220, 90, 15, ${spotAlpha})`);
-        g3.addColorStop(0.5, `rgba(180, 55, 8, ${spotAlpha * 0.4})`);
-        g3.addColorStop(1, 'rgba(150, 40, 5, 0)');
-        ctx.fillStyle = g3;
-        ctx.fillRect(cx - spotR, cy - spotR, spotR * 2, spotR * 2);
-      }
-
-      // Layer 4: ember line
-      const g4 = ctx.createLinearGradient(0, H, 0, H - 8);
-      g4.addColorStop(0, `rgba(240, 120, 30, ${0.15 * intensity})`);
-      g4.addColorStop(1, 'rgba(200, 70, 10, 0)');
-      ctx.fillStyle = g4;
-      ctx.fillRect(0, H - 8, W, 8);
-
-      // Draw embers
-      embers.forEach(e => {
-        e.osc += e.oSpd;
-        e.y += e.vy;
-        e.x += e.vx + Math.sin(e.osc) * e.oscAmp;
-        e.life++;
-        e.curAlp = e.alp * (1 - Math.pow(e.life / e.max, 1.8));
-        if (e.life >= e.max || e.y < -8) Object.assign(e, spawnEmber(false));
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, e.curAlp);
-        const g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r * 3.5);
-        g.addColorStop(0, splashCfg.glowColor);
-        g.addColorStop(0.4, splashCfg.glowMid);
-        g.addColorStop(1, 'rgba(180, 50, 8, 0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.r * 3.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = splashCfg.coreColor;
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.r * 0.45, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+      const splashEmber = new EmberSystem(splashCanvas, {
+        count:          isMobile ? 80 : isTablet ? 150 : 400,
+        speedMult:      1.6,
+        glowColor:      'rgba(240, 100, 20, 0.9)',
+        glowMid:        'rgba(220, 75, 15, 0.45)',
+        coreColor:      'rgba(255, 220, 110, 1)',
+        oscAmp:         0.5,
+        flameHeight:    0.5,
+        flameIntensity: 1.0,
       });
 
-      requestAnimationFrame(splashTick);
-    }
-    requestAnimationFrame(splashTick);
+      let splashRunning = true;
+      (function splashLoop() {
+        if (splashRunning) splashEmber.tick();
+        requestAnimationFrame(splashLoop);
+      }());
 
-    setTimeout(() => {
-      splash.classList.add('done');
-      document.body.classList.remove('splash-active');
       setTimeout(() => {
-        splashRunning = false;
-        splash.style.display = 'none';
-      }, 800);
-    }, 2800);
-    }); // end requestAnimationFrame
+        splash.classList.add('done');
+        document.body.classList.remove('splash-active');
+        setTimeout(() => { splashRunning = false; splash.style.display = 'none'; }, 800);
+      }, 2800);
+    });
   })();
 
   /* ---- Lazy-load hero GIF after page is interactive ---- */
