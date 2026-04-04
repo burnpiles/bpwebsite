@@ -352,6 +352,11 @@
 
         <h3 style="margin-top:2rem;font-family:var(--font-mono);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent)">Branding</h3>
         <div class="field">
+          <label>Hero Background Image / GIF URL</label>
+          <input type="url" id="s-hero-bg" placeholder="https://… (GIF or image behind BURNPILES header)">
+          <div class="field-hint">Shown behind the hero text with a dark overlay. GIFs autoplay. Leave blank for default.</div>
+        </div>
+        <div class="field">
           <label>Social Share Image URL (1200x630 PNG)</label>
           <input type="url" id="s-og-image" placeholder="https://… (shown when sharing on iMessage, Twitter, Slack, etc.)">
           <div class="field-hint">Must be a PNG or JPG at 1200x630px. SVGs won't work. Host on Imgur, Cloudflare, etc.</div>
@@ -475,6 +480,7 @@
     apiKey:     '',
     beehiivApiKey: '',
     beehiivPubId:  'pub_52423244-f79b-4c0f-805b-a6e7757dd803',
+    heroBg:        '',
     ogImage:       '',
     originImage:   '',
     social: {
@@ -561,6 +567,7 @@
     document.getElementById('s-apikey').value    = cfg.apiKey    || '';
     document.getElementById('s-beehiiv-apikey').value = cfg.beehiivApiKey || '';
     document.getElementById('s-beehiiv-pubid').value  = cfg.beehiivPubId  || '';
+    document.getElementById('s-hero-bg').value         = cfg.heroBg        || '';
     document.getElementById('s-og-image').value       = cfg.ogImage       || '';
     document.getElementById('s-origin-img').value     = cfg.originImage   || '';
     document.getElementById('sc-instagram').value = cfg.social?.instagram || '';
@@ -575,6 +582,7 @@
     cfg.apiKey       = document.getElementById('s-apikey').value.trim();
     cfg.beehiivApiKey = document.getElementById('s-beehiiv-apikey').value.trim();
     cfg.beehiivPubId  = document.getElementById('s-beehiiv-pubid').value.trim();
+    cfg.heroBg        = document.getElementById('s-hero-bg').value.trim();
     cfg.ogImage       = document.getElementById('s-og-image').value.trim();
     cfg.originImage   = document.getElementById('s-origin-img').value.trim();
     saveConfig();

@@ -163,6 +163,17 @@
       justify-content: space-between;
       overflow: hidden;
     }
+    /* Hero background image (set via admin or JS) */
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background-size: cover;
+      background-position: center;
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(12, 11, 9, 0.75);
+    }
 
     .hero-top {
       flex: 1;
@@ -1845,8 +1856,9 @@
        HERO — brand statement top, three divisions bottom
        ============================================================ -->
   <section id="hero" aria-labelledby="hero-title">
+    <div class="hero-bg" id="hero-bg"></div>
 
-    <div class="wrap hero-top">
+    <div class="wrap hero-top" style="position:relative;z-index:1">
       <p class="hero-eyebrow">Burn the noise. Keep the signal.</p>
       <h1 class="hero-wordmark" id="hero-title">Burnpiles</h1>
       <a href="#intake" class="hero-cta">How can we help? →</a>
@@ -2221,6 +2233,12 @@
         if (label.includes('LinkedIn')  && cfg.social.linkedin)  a.href = cfg.social.linkedin;
         if (label.includes(' X')        && cfg.social.x)         a.href = cfg.social.x;
       });
+    }
+
+    // Hero background image
+    if (cfg.heroBg) {
+      const heroBg = document.getElementById('hero-bg');
+      if (heroBg) heroBg.style.backgroundImage = `url(${cfg.heroBg})`;
     }
 
     // Social share image
@@ -3382,16 +3400,18 @@
     }
     document.body.classList.add('splash-active');
 
-    // Force canvas dimensions to match viewport exactly
-    const W = window.innerWidth;
-    const H = window.innerHeight;
-    splashCanvas.width = W;
-    splashCanvas.height = H;
-    splashCanvas.style.width = W + 'px';
-    splashCanvas.style.height = H + 'px';
+    // Force canvas dimensions — use documentElement for Safari/iPad compatibility
+    const dpr = window.devicePixelRatio || 1;
+    const W = Math.max(window.innerWidth, document.documentElement.clientWidth, screen.width) || 1024;
+    const H = Math.max(window.innerHeight, document.documentElement.clientHeight, screen.height) || 768;
+    splashCanvas.width = W * dpr;
+    splashCanvas.height = H * dpr;
+    splashCanvas.style.width = '100%';
+    splashCanvas.style.height = '100%';
+    const ctx = splashCanvas.getContext('2d');
+    ctx.scale(dpr, dpr);
 
     // Create a dedicated splash ember system (Fuel-level intensity)
-    const ctx = splashCanvas.getContext('2d');
     const splashCfg = {
       count: 500, speedMult: 1.6,
       glowColor: 'rgba(240, 100, 20, 0.9)',
