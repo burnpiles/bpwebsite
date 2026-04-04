@@ -2618,40 +2618,46 @@
     }
   }
 
-  // ---- Full-hero ember canvas — init on load so layout is fully stable ----
+  // ---- Full-hero ember canvas — start immediately so it's running when splash fades ----
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!prefersReducedMotion) {
-    window.addEventListener('load', () => {
-      const heroCanvas = document.getElementById('hero-canvas');
-      const heroEl     = document.getElementById('hero');
-      heroCanvas.width  = Math.max(heroEl.offsetWidth,  window.innerWidth)  || 1024;
-      heroCanvas.height = Math.max(heroEl.offsetHeight, window.innerHeight) || 768;
+    const heroCanvas = document.getElementById('hero-canvas');
+    const heroEl     = document.getElementById('hero');
+    const _isMobile  = window.innerWidth < 768;
+    const _isTablet  = window.innerWidth >= 768 && window.innerWidth < 1200;
 
-      const heroEmber = new EmberSystem(heroCanvas, {
-        count: 280, speedMult: 0.75,
-        glowColor: 'rgba(220, 95, 18, 0.7)',
-        glowMid:   'rgba(185, 55, 8, 0.28)',
-        coreColor: 'rgba(248, 185, 80, 0.92)',
-        oscAmp: 0.3,
-        flameHeight: 0.18,
-        flameIntensity: 0.45,
-      });
+    // Force canvas to viewport dimensions directly — don't rely on offsetWidth timing
+    heroCanvas.width  = window.innerWidth;
+    heroCanvas.height = window.innerHeight;
 
-      (function emberLoop() {
-        heroEmber.tick();
-        requestAnimationFrame(emberLoop);
-      }());
+    const heroEmber = new EmberSystem(heroCanvas, {
+      count: _isMobile ? 80 : _isTablet ? 150 : 400,
+      speedMult: 1.6,
+      glowColor: 'rgba(240, 100, 20, 0.9)',
+      glowMid:   'rgba(220, 75, 15, 0.45)',
+      coreColor: 'rgba(255, 220, 110, 1)',
+      oscAmp: 0.5,
+      flameHeight: 0.5,
+      flameIntensity: 1.0,
+    });
 
-      let emberResizeTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(emberResizeTimer);
-        emberResizeTimer = setTimeout(() => {
-          heroCanvas.width  = heroEl.offsetWidth  || window.innerWidth;
-          heroCanvas.height = heroEl.offsetHeight || window.innerHeight;
-          heroEmber.resize();
-        }, 120);
-      });
-    }, { once: true });
+    // Ensure W/H are correct regardless of what resize() measured
+    heroEmber.W = heroCanvas.width  = window.innerWidth;
+    heroEmber.H = heroCanvas.height = window.innerHeight;
+
+    (function heroEmberLoop() {
+      heroEmber.tick();
+      requestAnimationFrame(heroEmberLoop);
+    }());
+
+    let heroResizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(heroResizeTimer);
+      heroResizeTimer = setTimeout(() => {
+        heroEmber.W = heroCanvas.width  = window.innerWidth;
+        heroEmber.H = heroCanvas.height = heroEl.offsetHeight || window.innerHeight;
+      }, 120);
+    });
   }
 
   /* ============================================================
