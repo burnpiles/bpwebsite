@@ -815,6 +815,17 @@
       padding-top: 0.6rem;
       opacity: 0.85;
     }
+    .card-tags {
+      display: flex; flex-wrap: wrap; gap: 0.2rem;
+      padding-top: 0.45rem;
+    }
+    .card-tag {
+      display: inline-flex; align-items: center;
+      padding: 0.1rem 0.45rem; border-radius: 999px;
+      font-family: var(--font-body); font-size: 0.46rem;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      font-weight: 600; color: #000; white-space: nowrap;
+    }
 
     /* ---- Work Modal ---- */
     #work-modal {
@@ -2375,6 +2386,8 @@
   // (handles incognito / no localStorage where _adminCfg is always empty)
   let _heroEmberAllowed = _adminCfg.heroEmberEnabled !== false;
   let _workEmberAllowed = _adminCfg.workEmberEnabled !== false;
+  const _STATUS_TAGS = { 'Active': '#4ade80', 'Past': '#f87171', 'In-Dev': '#facc15' };
+  let _tagPalette = {};
 
   /* ============================================================
      ADMIN OVERRIDES — load from localStorage (set by admin.html)
@@ -2454,6 +2467,8 @@
       if (s.calendly_url) {
         document.querySelectorAll('a[href*="calendly.com"]').forEach(a => a.href = s.calendly_url);
       }
+      // Tag palette — used for colored tags on portfolio cards
+      if (s.tag_palette) { try { _tagPalette = JSON.parse(s.tag_palette); } catch(e) {} }
       // Ember kill switches — override module-level flags from Supabase
       // (catches incognito / no localStorage where _adminCfg defaults to all-on)
       // Also clear the canvas so the last frame doesn't freeze on screen
@@ -2532,10 +2547,12 @@
       if (s.origin_body) {
         const ot = document.querySelector('.origin-text');
         if (ot) {
-          ot.innerHTML = s.origin_body
-            .split(/\n\n+/)
-            .map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`)
-            .join('');
+          // If stored as HTML (from RTE), use directly; else convert plain text
+          if (/<[a-z][\s\S]*>/i.test(s.origin_body)) {
+            ot.innerHTML = s.origin_body;
+          } else {
+            ot.innerHTML = s.origin_body.split(/\n\n+/).map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`).join('');
+          }
         }
       }
       // Meta tags
@@ -3161,11 +3178,16 @@
       }
 
       const attrib = [p.client, p.year].filter(Boolean).map(esc).join(' · ');
+      const tagsHtml = (p.tags || []).map(t => {
+        const color = _STATUS_TAGS[t] || _tagPalette[t]?.color || '#5a5040';
+        return `<span class="card-tag" style="background:${color}">${esc(t)}</span>`;
+      }).join('');
       card.innerHTML = `
         <div class="card-body">
           <span class="card-type">${esc(p.type)}</span>
           <h3 class="card-title">${esc(p.title)}</h3>
           ${attrib ? `<span class="card-attrib">${attrib}</span>` : ''}
+          ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
         </div>`;
 
       card.addEventListener('click', () => openWorkModal(p));

@@ -276,6 +276,9 @@
       transition: color 0.15s;
     }
     .tag-pill-remove:hover { color: rgba(0,0,0,0.9); }
+    .type-tag-wrap { display: inline-flex; align-items: center; gap: 0.1rem; }
+    .tag-palette-del { background: none; border: none; cursor: pointer; font-size: 0.75rem; color: var(--text-dim); padding: 0 0.15rem; line-height: 1; transition: color 0.15s; }
+    .tag-palette-del:hover { color: var(--text); }
 
     /* ---- Tag picker panel ---- */
     .tag-picker-panel {
@@ -333,6 +336,17 @@
       transition: border-color 0.2s, color 0.2s;
     }
     .preview-size-btn.active { border-color: var(--accent); color: var(--accent); }
+
+    /* ---- Rich text editor ---- */
+    .rte-toolbar { display: flex; gap: 0.35rem; margin-bottom: 0.35rem; }
+    .rte-btn { background: var(--surface-hi); border: 1px solid var(--border); color: var(--text); border-radius: 3px; padding: 0.25rem 0.6rem; cursor: pointer; font-size: 0.7rem; line-height: 1; transition: background 0.15s, border-color 0.15s; }
+    .rte-btn:hover { background: var(--surface-raised); border-color: var(--border-mid); }
+    .rte-editor { min-height: 9rem; padding: 0.65rem 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-size: 0.78rem; line-height: 1.65; color: var(--text); outline: none; }
+    .rte-editor:focus { border-color: var(--accent); }
+    .rte-editor strong, .rte-editor b { color: var(--accent); font-weight: 600; }
+    .rte-editor p { margin: 0; }
+    .rte-editor p + p { margin-top: 0.8em; }
+    .rte-editor div { margin: 0; }
 
     /* ---- Toast ---- */
     #toast {
@@ -831,8 +845,13 @@
           </div>
           <div class="field">
             <label>Story Body</label>
-            <textarea id="story-body" rows="8" placeholder="My grandpa was a farmer with a burn pile — for brush, deadwood, and ideas..."></textarea>
-            <div class="field-hint">Plain text. Use a blank line between paragraphs — they'll be rendered as separate &lt;p&gt; tags.</div>
+            <div class="rte-toolbar">
+              <button type="button" class="rte-btn" onmousedown="event.preventDefault()" onclick="document.getElementById('story-body-rte').focus();document.execCommand('bold')"><b>B</b></button>
+              <button type="button" class="rte-btn" onmousedown="event.preventDefault()" onclick="document.getElementById('story-body-rte').focus();document.execCommand('italic')"><i>I</i></button>
+              <button type="button" class="rte-btn" onmousedown="event.preventDefault()" onclick="document.getElementById('story-body-rte').focus();document.execCommand('removeFormat')">Clear</button>
+            </div>
+            <div id="story-body-rte" contenteditable="true" class="rte-editor"></div>
+            <div class="field-hint">Bold text (<b>B</b>) renders as orange on the live site. Press Enter for new paragraph.</div>
           </div>
         </div>
 
@@ -1270,8 +1289,13 @@
     _g('svc-fuel-purpose').value    = cfg.fuelPurpose     || '';
     _g('svc-fuel-desc').value       = cfg.fuelDesc        || '';
     _g('svc-fuel-pricing').value    = cfg.fuelPricing     || '';
-    _g('story-heading').value         = cfg.originHeading    || '';
-    _g('story-body').value            = cfg.originBody       || '';
+    _g('story-heading').value = cfg.originHeading || '';
+    (function() {
+      const rte = document.getElementById('story-body-rte');
+      if (!rte) return;
+      const DEFAULT_ORIGIN = `<p>My grandpa was a farmer with a <strong>burn pile</strong> — for brush, deadwood, and ideas. Sketches, half-plans, things he'd been carrying. When he was done with something, he'd walk it out to the pile.</p><p>He wasn't destroying them. He was releasing them. The signal had already been captured. Everything else was noise.</p><p>Burnpiles — burn the noise. Keep the signal.</p>`;
+      rte.innerHTML = cfg.originBody || DEFAULT_ORIGIN;
+    })();
     _g('s-newsletter-bg').value       = cfg.newsletterBg     || '';
     _g('intake-result-body').value      = cfg.intakeResultBody  || '';
     _g('intake-cta-text').value         = cfg.intakeCtaText     || '';
@@ -1360,7 +1384,8 @@
 
   function saveStory() {
     cfg.originHeading = document.getElementById('story-heading').value.trim();
-    cfg.originBody    = document.getElementById('story-body').value.trim();
+    const rte = document.getElementById('story-body-rte');
+    cfg.originBody = rte ? rte.innerHTML : '';
     saveConfig();
     toast('Origin story saved.', 'success');
   }
@@ -1546,9 +1571,7 @@
           </div>
           <div class="tag-picker-row" id="pf-${i}-type-row">
             <span class="tag-picker-label">Type</span>
-            ${Object.entries(tagPalette).map(([name, def]) =>
-              `<button type="button" class="tag-pill tag-pill--pick" style="background:${esc(def.color)}" onclick="pickTag(${i},'${esc(name)}','${esc(def.color)}')">${esc(name)}</button>`
-            ).join('')}
+            ${Object.entries(tagPalette).map(([name, def]) => buildTypePillHTML(i, name, def.color)).join('')}
             <button type="button" class="tag-add-type-btn" onclick="toggleNewTypeForm(${i})">+ New type</button>
           </div>
           <div class="tag-new-type-form" id="pf-${i}-new-type">
@@ -1902,16 +1925,35 @@
     const typeRow = document.getElementById(`pf-${projIdx}-type-row`);
     if (typeRow) {
       const addBtn = typeRow.querySelector('.tag-add-type-btn');
-      const pill = document.createElement('button');
-      pill.type = 'button';
-      pill.className = 'tag-pill tag-pill--pick';
-      pill.style.cssText = `background:${color}`;
-      pill.textContent = name;
-      pill.onclick = () => pickTag(projIdx, name, color);
-      typeRow.insertBefore(pill, addBtn);
+      const wrap = document.createElement('span');
+      wrap.className = 'type-tag-wrap';
+      wrap.innerHTML = buildTypePillHTML(projIdx, name, color);
+      typeRow.insertBefore(wrap, addBtn);
     }
     toggleNewTypeForm(projIdx);
     if (nameInput) nameInput.value = '';
+  }
+
+  function buildTypePillHTML(projIdx, name, color) {
+    return `<span class="type-tag-wrap"><button type="button" class="tag-pill tag-pill--pick" style="background:${esc(color)}" onclick="pickTag(${projIdx},'${esc(name)}','${esc(color)}')">${esc(name)}</button><button type="button" class="tag-palette-del" onclick="deleteTypeTag('${esc(name)}',${projIdx})" title="Delete tag from palette">×</button></span>`;
+  }
+
+  async function deleteTypeTag(name, projIdx) {
+    if (!confirm(`Delete "${name}" tag from palette?`)) return;
+    delete tagPalette[name];
+    await savePalette();
+    // Rebuild the type row for this project
+    const typeRow = document.getElementById(`pf-${projIdx}-type-row`);
+    if (typeRow) {
+      const addBtn = typeRow.querySelector('.tag-add-type-btn');
+      typeRow.querySelectorAll('.type-tag-wrap').forEach(el => el.remove());
+      Object.entries(tagPalette).forEach(([n, def]) => {
+        const wrap = document.createElement('span');
+        wrap.innerHTML = buildTypePillHTML(projIdx, n, def.color);
+        typeRow.insertBefore(wrap.firstChild, addBtn);
+      });
+    }
+    toast(`Tag "${name}" deleted.`, 'success');
   }
 
   async function savePalette() {
@@ -1929,7 +1971,7 @@
       ? `background:url(${p.thumb}) center/cover no-repeat`
       : `background:${p.thumb_bg || '#181310'}`;
     const cardInner = `
-      <div style="${bgStyle};min-height:190px;display:flex;flex-direction:column;justify-content:flex-end">
+      <div style="${bgStyle};aspect-ratio:16/10;display:flex;flex-direction:column;justify-content:flex-end">
         <div style="padding:1rem 0.9rem 1.2rem;background:linear-gradient(to top,rgba(12,11,9,0.97) 0%,rgba(12,11,9,0.45) 100%)">
           <span style="display:block;font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:#8a8170;margin-bottom:0.35rem">${esc(p.type)}</span>
           <span style="display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.05rem;font-weight:300;color:#eee8dc;line-height:1.2;margin-bottom:0.2rem">${esc(p.title)}</span>
