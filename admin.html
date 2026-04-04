@@ -756,7 +756,7 @@
         <div class="field" style="flex:1">
           <input type="url" id="pf-${i}-galsrc-${gi}" value="${esc(item.src || '')}" placeholder="URL">
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="removeGalleryItem(${i}, ${gi})" style="align-self:flex-end;padding:0.4rem 0.6rem;color:var(--accent)">✕</button>
+        <button class="btn btn-ghost btn-sm" onclick="removeGalleryItem(${i}, ${gi})" style="align-self:center;padding:0.4rem 0.6rem;color:var(--text-dim);font-size:0.8rem" title="Remove">✕</button>
       </div>`).join('');
 
     return `
@@ -815,7 +815,7 @@
           <div class="field-row link-row" id="pf-${i}-link-${li}">
             <div class="field" style="flex:1"><input type="text" id="pf-${i}-linklabel-${li}" value="${esc(lnk.label||'')}" placeholder="Button label (e.g. Case Study →)"></div>
             <div class="field" style="flex:1.5"><input type="url" id="pf-${i}-linkurl-${li}" value="${esc(lnk.url||'')}" placeholder="https://…"></div>
-            <button class="btn btn-ghost btn-sm" onclick="removeLink(${i},${li})" style="align-self:flex-end;padding:0.4rem 0.6rem;color:var(--accent)">✕</button>
+            <button class="btn btn-ghost btn-sm" onclick="removeLink(${i},${li})" style="align-self:center;padding:0.4rem 0.6rem;color:var(--text-dim);font-size:0.8rem" title="Remove">✕</button>
           </div>`).join('')}</div>
         <button class="btn btn-ghost btn-sm" onclick="addLink(${i})" style="margin-top:0.4rem">+ Add link</button>
         <div class="field-hint">e.g. "Watch Video →" + YouTube URL, "Case Study →" + PDF link</div>
@@ -850,6 +850,7 @@
     const galRows = galContainer ? galContainer.querySelectorAll('.gallery-row') : [];
     const gallery = [];
     galRows.forEach((row, gi) => {
+      if (row.dataset.removed === '1') return;
       const kind = document.getElementById(`pf-${i}-galkind-${gi}`)?.value || 'image';
       const src  = document.getElementById(`pf-${i}-galsrc-${gi}`)?.value?.trim() || '';
       if (src) gallery.push({ kind, src });
@@ -863,11 +864,12 @@
     const tagStr = document.getElementById(`pf-${i}-tags`).value;
     p.tags = tagStr.split(',').map(t => t.trim()).filter(Boolean);
 
-    // Collect links
+    // Collect links (skip removed rows)
     const linksContainer = document.getElementById(`pf-${i}-links`);
     const linkRows = linksContainer ? linksContainer.querySelectorAll('.link-row') : [];
     const links = [];
     linkRows.forEach((row, li) => {
+      if (row.dataset.removed === '1') return;
       const label = document.getElementById(`pf-${i}-linklabel-${li}`)?.value?.trim() || '';
       const url   = document.getElementById(`pf-${i}-linkurl-${li}`)?.value?.trim() || '';
       if (url) links.push({ label: label || 'View →', url });
@@ -893,11 +895,11 @@
   }
 
   function removeGalleryItem(projIdx, galIdx) {
-    const projects = getProjects();
-    const p = projects[projIdx];
-    if (p.media.gallery) p.media.gallery.splice(galIdx, 1);
-    editingIdx = projIdx;
-    renderProjectList();
+    const row = document.getElementById(`pf-${projIdx}-gal-${galIdx}`);
+    if (row) {
+      row.style.display = 'none';
+      row.dataset.removed = '1';
+    }
   }
 
   // Publish/unpublish toggle
@@ -920,11 +922,12 @@
   }
 
   function removeLink(projIdx, linkIdx) {
-    const projects = getProjects();
-    const p = projects[projIdx];
-    if (p.links) p.links.splice(linkIdx, 1);
-    editingIdx = projIdx;
-    renderProjectList();
+    // Just hide the row — actual removal happens on Save
+    const row = document.getElementById(`pf-${projIdx}-link-${linkIdx}`);
+    if (row) {
+      row.style.display = 'none';
+      row.dataset.removed = '1';
+    }
   }
 
   async function addProject() {
