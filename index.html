@@ -2595,7 +2595,7 @@
 
     // Beehiiv — fetch latest posts
     let bhCfg; try { bhCfg = JSON.parse(localStorage.getItem('bp_admin') || 'null'); } catch(e) {}
-    if (bhCfg?.beehiivApiKey && bhCfg?.beehiivPubId) {
+    if (bhCfg && bhCfg.beehiivApiKey && bhCfg.beehiivPubId) {
       fetch(`https://api.beehiiv.com/v2/publications/${bhCfg.beehiivPubId}/posts?limit=3&status=confirmed&order_by=publish_date&direction=desc`, {
         headers: { 'Authorization': `Bearer ${bhCfg.beehiivApiKey}` }
       })
@@ -2641,8 +2641,9 @@
     }
 
     resize() {
-      const w = this.canvas.offsetWidth  || this.canvas.parentElement?.offsetWidth  || window.innerWidth;
-      const h = this.canvas.offsetHeight || this.canvas.parentElement?.offsetHeight || window.innerHeight;
+      const parent = this.canvas.parentElement;
+      const w = this.canvas.offsetWidth  || (parent && parent.offsetWidth)  || window.innerWidth;
+      const h = this.canvas.offsetHeight || (parent && parent.offsetHeight) || window.innerHeight;
       this.W = this.canvas.width  = w;
       this.H = this.canvas.height = h;
     }
@@ -2781,9 +2782,13 @@
     workEmber.H = workCanvas.height = workEl.offsetHeight || window.innerHeight;
 
     let workRunning = false;
-    new IntersectionObserver((entries) => {
-      entries.forEach(e => { workRunning = e.isIntersecting; });
-    }, { threshold: 0.05 }).observe(workEl);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) { workRunning = e.isIntersecting; });
+      }, { threshold: 0.05 }).observe(workEl);
+    } else {
+      workRunning = true; // no IO support — always animate
+    }
 
     (function workEmberLoop() {
       if (workRunning && _workEmberAllowed) workEmber.tick();
@@ -2838,9 +2843,11 @@
 
     // Pause hero embers when hero is off-screen (same pattern as work section)
     let heroRunning = true;
-    new IntersectionObserver((entries) => {
-      entries.forEach(e => { heroRunning = e.isIntersecting; });
-    }, { threshold: 0.05 }).observe(heroEl);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) { heroRunning = e.isIntersecting; });
+      }, { threshold: 0.05 }).observe(heroEl);
+    }
 
     (function heroEmberLoop() {
       if (heroRunning && _heroEmberAllowed) heroEmber.tick();
@@ -3179,7 +3186,7 @@
 
       const attrib = [p.client, p.year].filter(Boolean).map(esc).join(' · ');
       const tagsHtml = (p.tags || []).map(t => {
-        const color = _STATUS_TAGS[t] || _tagPalette[t]?.color || '#5a5040';
+        const color = _STATUS_TAGS[t] || (_tagPalette[t] && _tagPalette[t].color) || '#5a5040';
         return `<span class="card-tag" style="background:${color}">${esc(t)}</span>`;
       }).join('');
       card.innerHTML = `
@@ -3198,16 +3205,24 @@
     });
 
     // Lazy-load card background images when they scroll into view
-    const thumbObserver = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          const thumb = e.target.getAttribute('data-thumb');
-          if (thumb) e.target.style.backgroundImage = `url(${thumb})`;
-          thumbObserver.unobserve(e.target);
-        }
+    if ('IntersectionObserver' in window) {
+      var thumbObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (e.isIntersecting) {
+            var thumb = e.target.getAttribute('data-thumb');
+            if (thumb) e.target.style.backgroundImage = 'url(' + thumb + ')';
+            thumbObserver.unobserve(e.target);
+          }
+        });
+      }, { rootMargin: '200px' });
+      grid.querySelectorAll('[data-thumb]').forEach(function(c) { thumbObserver.observe(c); });
+    } else {
+      // Fallback: load all thumbs immediately
+      grid.querySelectorAll('[data-thumb]').forEach(function(c) {
+        var thumb = c.getAttribute('data-thumb');
+        if (thumb) c.style.backgroundImage = 'url(' + thumb + ')';
       });
-    }, { rootMargin: '200px' });
-    grid.querySelectorAll('[data-thumb]').forEach(c => thumbObserver.observe(c));
+    }
   }());
 
   // ---- Modal ----
@@ -3328,17 +3343,19 @@
   /* ============================================================
      SCROLL REVEAL
      ============================================================ */
-  const ro = new IntersectionObserver(
-    entries => entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        ro.unobserve(e.target);
-      }
-    }),
-    { threshold: 0.08, rootMargin: '0px 0px -50px 0px' }
-  );
-  document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
-  document.querySelectorAll('.hdiv').forEach(el => ro.observe(el));
+  if ('IntersectionObserver' in window) {
+    var ro = new IntersectionObserver(
+      function(entries) { entries.forEach(function(e) {
+        if (e.isIntersecting) { e.target.classList.add('visible'); ro.unobserve(e.target); }
+      }); },
+      { threshold: 0.08, rootMargin: '0px 0px -50px 0px' }
+    );
+    document.querySelectorAll('.reveal').forEach(function(el) { ro.observe(el); });
+    document.querySelectorAll('.hdiv').forEach(function(el) { ro.observe(el); });
+  } else {
+    // Fallback: show everything immediately on browsers without IntersectionObserver
+    document.querySelectorAll('.reveal, .hdiv').forEach(function(el) { el.classList.add('visible'); });
+  }
 
   /* ---- Anchor smooth scroll (delegated — works for dynamic links too) ---- */
   document.addEventListener('click', e => {
@@ -3651,7 +3668,7 @@
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `API ${res.status}`);
+      throw new Error((err.error && err.error.message) || ('API ' + res.status));
     }
 
     const data = await res.json();
@@ -3902,9 +3919,9 @@
       company: userCompany,
       email: userEmail,
       input: userText,
-      question1: qs[0]?.question,
+      question1: qs[0] && qs[0].question,
       answer1: picks[0],
-      question2: qs[1]?.question,
+      question2: qs[1] && qs[1].question,
       answer2: picks[1],
       route: suggestedRoute,
       triageLabel,
