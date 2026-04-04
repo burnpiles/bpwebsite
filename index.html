@@ -2615,34 +2615,41 @@
     }
   }
 
-  // ---- Single full-hero ember system ----
-  const heroEmber = new EmberSystem(document.getElementById('hero-canvas'), {
-    count: 280, speedMult: 0.75,
-    glowColor: 'rgba(220, 95, 18, 0.7)',
-    glowMid:   'rgba(185, 55, 8, 0.28)',
-    coreColor: 'rgba(248, 185, 80, 0.92)',
-    oscAmp: 0.3,
-    flameHeight: 0.18,
-    flameIntensity: 0.45,
-  });
-
-  const emberSystems = [heroEmber];
-
-  // ---- Single shared rAF loop ----
+  // ---- Full-hero ember canvas — deferred so layout is complete before sizing ----
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!prefersReducedMotion) {
-    (function emberLoop() {
-      emberSystems.forEach(s => s.tick());
-      requestAnimationFrame(emberLoop);
-    }());
-  }
+    requestAnimationFrame(() => {
+      const heroCanvas = document.getElementById('hero-canvas');
+      const heroEl     = document.getElementById('hero');
+      heroCanvas.width  = Math.max(heroEl.offsetWidth,  window.innerWidth)  || 1024;
+      heroCanvas.height = Math.max(heroEl.offsetHeight, window.innerHeight) || 768;
 
-  // ---- Resize handler ----
-  let emberResizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(emberResizeTimer);
-    emberResizeTimer = setTimeout(() => emberSystems.forEach(s => s.resize()), 120);
-  });
+      const heroEmber = new EmberSystem(heroCanvas, {
+        count: 280, speedMult: 0.75,
+        glowColor: 'rgba(220, 95, 18, 0.7)',
+        glowMid:   'rgba(185, 55, 8, 0.28)',
+        coreColor: 'rgba(248, 185, 80, 0.92)',
+        oscAmp: 0.3,
+        flameHeight: 0.18,
+        flameIntensity: 0.45,
+      });
+
+      (function emberLoop() {
+        heroEmber.tick();
+        requestAnimationFrame(emberLoop);
+      }());
+
+      let emberResizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(emberResizeTimer);
+        emberResizeTimer = setTimeout(() => {
+          heroCanvas.width  = heroEl.offsetWidth  || window.innerWidth;
+          heroCanvas.height = heroEl.offsetHeight || window.innerHeight;
+          heroEmber.resize();
+        }, 120);
+      });
+    });
+  }
 
   /* ============================================================
      DIVISION MODALS — Flint / Forge / Fuel
