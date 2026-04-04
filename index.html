@@ -12,6 +12,24 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://burnpiles.com/media/og-image.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "Burnpiles",
+    "url": "https://burnpiles.com",
+    "description": "Creative technology studio. We help organizations ideate, prototype, and resource AI and XR projects.",
+    "slogan": "Burn the noise. Keep the signal.",
+    "email": "hey@burnpiles.com",
+    "serviceType": ["AI Strategy", "Rapid Prototyping", "XR Experience Design", "Creative Technology Staffing"],
+    "knowsAbout": ["Artificial Intelligence", "Extended Reality", "Creative Technology", "Interactive Narrative"],
+    "sameAs": [
+      "https://instagram.com/burnpiles",
+      "https://x.com/burnpiles",
+      "https://linkedin.com/company/burnpiles"
+    ]
+  }
+  </script>
   <title>Burnpiles — Burn the noise. Keep the signal.</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
 
@@ -230,6 +248,9 @@
       flex-direction: column;
       justify-content: center;
       padding: clamp(5rem, 10vh, 9rem) 0 clamp(2.5rem, 4vh, 3.5rem);
+      background: #0c0b09;
+      position: relative;
+      z-index: 1;
     }
 
     .hero-eyebrow {
@@ -420,9 +441,7 @@
       overflow: hidden;
       padding: clamp(1.6rem, 3vw, 2.5rem) clamp(1.8rem, 3.5vw, 3rem) clamp(2rem, 4vh, 3rem);
       border-right: 1px solid var(--border);
-      background: rgba(12, 11, 9, 0.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: transparent;
       box-shadow:
         inset 0 1px 0 rgba(238, 232, 220, 0.06),
         inset 0 0 30px rgba(196, 87, 26, 0.03);
@@ -442,7 +461,7 @@
     .hdiv:nth-child(3).visible { transition-delay: 0.3s; }
     .hdiv:last-child { border-right: none; }
     .hdiv:hover {
-      background: rgba(12, 11, 9, 0.95);
+      background: rgba(12, 11, 9, 0.4);
       box-shadow:
         inset 0 1px 0 rgba(238, 232, 220, 0.1),
         inset 0 0 50px rgba(196, 87, 26, 0.06),
@@ -689,6 +708,20 @@
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     }
     .work-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Skeleton loading cards */
+    .work-card.skeleton { cursor: default; pointer-events: none; }
+    .skeleton-line {
+      display: block;
+      background: linear-gradient(90deg, var(--surface-raised) 25%, rgba(238,232,220,0.05) 50%, var(--surface-raised) 75%);
+      background-size: 200% 100%;
+      animation: skeletonShimmer 1.6s ease-in-out infinite;
+      border-radius: 2px;
+    }
+    @keyframes skeletonShimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
 
     .card-thumb {
       aspect-ratio: 16 / 10;
@@ -1937,7 +1970,7 @@
        HERO — brand statement top, three divisions bottom
        ============================================================ -->
   <section id="hero" aria-labelledby="hero-title">
-    <div class="hero-bg" id="hero-bg"><img src="media/bpbackground.gif" alt="" loading="eager"></div>
+    <div class="hero-bg" id="hero-bg"><img data-src="media/bpbackground.gif" alt=""></div>
 
     <div class="wrap hero-top" style="position:relative;z-index:1;">
       <p class="hero-eyebrow">Burn the noise. Keep the signal.</p>
@@ -2889,6 +2922,17 @@
     const grid = document.getElementById('work-grid');
     if (!grid) return;
 
+    // Show skeleton cards while fetching
+    grid.innerHTML = Array(6).fill(0).map(() => `
+      <div class="work-card skeleton" aria-hidden="true">
+        <div class="card-body" style="padding:1.4rem 1.2rem">
+          <span class="skeleton-line" style="width:42%;height:0.55rem;margin-bottom:0.8rem"></span>
+          <span class="skeleton-line" style="width:75%;height:0.9rem;margin-bottom:0.5rem"></span>
+          <span class="skeleton-line" style="width:52%;height:0.65rem;margin-bottom:0.5rem"></span>
+          <span class="skeleton-line" style="width:22%;height:0.55rem"></span>
+        </div>
+      </div>`).join('');
+
     // Try Supabase first, fallback to hardcoded PROJECTS
     let activeProjects;
     const supaProjects = await supaFetch('projects', 'select=*&status=eq.published&order=sort_order');
@@ -2904,6 +2948,8 @@
       const allProjects = window._adminProjects || PROJECTS;
       activeProjects = allProjects.filter(p => p.status !== 'draft');
     }
+    // Clear skeletons, render real cards
+    grid.innerHTML = '';
     activeProjects.forEach((p, i) => {
       const card = document.createElement('article');
       card.className = 'work-card';
@@ -3711,6 +3757,12 @@
     }, 2800);
     }); // end requestAnimationFrame
   })();
+
+  /* ---- Lazy-load hero GIF after page is interactive ---- */
+  window.addEventListener('load', function () {
+    const heroImg = document.querySelector('#hero-bg img[data-src]');
+    if (heroImg) heroImg.src = heroImg.dataset.src;
+  });
 
   /* ---- Save submission locally + POST to /api/intake ---- */
   async function postIntake(triageLabel) {

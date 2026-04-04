@@ -220,18 +220,82 @@
     }
     .proj-edit-actions { display: flex; gap: 0.6rem; margin-top: 1.2rem; }
 
-    /* ---- Tags input ---- */
-    .tags-display { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
-    .tag-chip {
-      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--text-muted); border: 1px solid var(--border);
-      padding: 0.18rem 0.45rem; display: flex; align-items: center; gap: 0.3rem;
+    /* ---- Tag pills (colored ovals with black text) ---- */
+    .tag-current-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; min-height: 1.8rem; margin-bottom: 0.6rem; }
+    .tag-pill {
+      display: inline-flex; align-items: center; gap: 0.28rem;
+      padding: 0.22rem 0.7rem; border-radius: 999px;
+      font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;
+      font-weight: 600; color: #000 !important;
+      border: none; cursor: pointer; user-select: none;
+      transition: opacity 0.15s, transform 0.1s;
     }
-    .tag-remove {
-      background: none; border: none; color: var(--text-dim); cursor: pointer;
-      font-size: 0.7rem; padding: 0; line-height: 1;
+    .tag-pill:hover { opacity: 0.85; }
+    .tag-pill--pick { transform: scale(0.95); }
+    .tag-pill--pick:hover { opacity: 1; transform: scale(1); }
+    .tag-pill-remove {
+      background: none; border: none; cursor: pointer;
+      color: rgba(0,0,0,0.45); font-size: 0.8rem; padding: 0; line-height: 1;
+      transition: color 0.15s;
     }
-    .tag-remove:hover { color: var(--danger); }
+    .tag-pill-remove:hover { color: rgba(0,0,0,0.9); }
+
+    /* ---- Tag picker panel ---- */
+    .tag-picker-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 0.7rem 0.8rem; margin-bottom: 0.4rem;
+    }
+    .tag-picker-row {
+      display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+    .tag-picker-row:last-child { margin-bottom: 0; }
+    .tag-picker-label {
+      font-size: 0.5rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-dim); min-width: 44px; flex-shrink: 0;
+    }
+    .tag-add-type-btn {
+      background: none; border: 1px dashed var(--border-mid);
+      color: var(--text-dim); font-family: var(--font-mono);
+      font-size: 0.55rem; letter-spacing: 0.1em; padding: 0.2rem 0.55rem;
+      cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .tag-add-type-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tag-new-type-form {
+      display: none; align-items: center; gap: 0.4rem; margin-top: 0.5rem;
+      padding-top: 0.5rem; border-top: 1px solid var(--border);
+    }
+    .tag-new-type-form input[type="text"] {
+      background: var(--surface-hi); border: 1px solid var(--border-mid);
+      color: var(--text); font-family: var(--font-mono); font-size: 0.75rem;
+      padding: 0.35rem 0.6rem; outline: none; flex: 1;
+      transition: border-color 0.2s;
+    }
+    .tag-new-type-form input[type="text"]:focus { border-color: var(--border-accent); }
+    .tag-new-type-form input[type="color"] {
+      width: 2.2rem; height: 1.8rem; padding: 0.1rem 0.15rem;
+      background: var(--surface-hi); border: 1px solid var(--border-mid);
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ---- Character counters ---- */
+    .char-count {
+      display: block; text-align: right; font-size: 0.55rem;
+      color: var(--text-dim); margin-top: 0.25rem; letter-spacing: 0.04em;
+      transition: color 0.2s;
+    }
+    .char-count.near { color: var(--accent-bright); }
+    .char-count.over { color: var(--danger); }
+
+    /* ---- Card preview panel (post-save) ---- */
+    .preview-size-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--text-dim); font-family: var(--font-mono);
+      font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.25rem 0.65rem; cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .preview-size-btn.active { border-color: var(--accent); color: var(--accent); }
 
     /* ---- Toast ---- */
     #toast {
@@ -535,6 +599,10 @@
   let supaProjects = [];
   let editingIdx = null;
 
+  // Tag system
+  const STATUS_TAGS = { 'Active': '#4ade80', 'Past': '#f87171', 'In-Dev': '#facc15' };
+  let tagPalette = {}; // { name: { color: '#...' } } — user-defined type tags, persisted in Supabase
+
   /* ============================================================ AUTH */
   function checkAuth() {
     if (sessionStorage.getItem('bp_authed') === '1') showApp();
@@ -587,6 +655,7 @@
         linkedin: s.social_linkedin || DEFAULTS.social.linkedin,
       },
     };
+    try { tagPalette = s.tag_palette ? JSON.parse(s.tag_palette) : {}; } catch(e) { tagPalette = {}; }
     // Load projects from Supabase
     supaProjects = await supaGet('projects', 'select=*&order=sort_order');
   }
@@ -605,6 +674,7 @@
       { key: 'social_instagram', value: cfg.social?.instagram || '' },
       { key: 'social_x', value: cfg.social?.x || '' },
       { key: 'social_linkedin', value: cfg.social?.linkedin || '' },
+      { key: 'tag_palette', value: JSON.stringify(tagPalette) },
     ];
     await supaUpsert('settings', pairs);
     // Also persist API key to window
@@ -764,16 +834,29 @@
     return `
       <span class="proj-edit-title">Editing: ${esc(p.title)}</span>
       <div class="field-row">
-        <div class="field"><label>Title <span style="color:var(--text-dim);font-size:0.6rem">(max 25 for mobile)</span></label><input type="text" id="pf-${i}-title" value="${esc(p.title)}" maxlength="40"></div>
-        <div class="field"><label>Client <span style="color:var(--text-dim);font-size:0.6rem">(max 25 for mobile)</span></label><input type="text" id="pf-${i}-client" value="${esc(p.client)}" maxlength="35"></div>
+        <div class="field">
+          <label>Title</label>
+          <input type="text" id="pf-${i}-title" value="${esc(p.title)}" maxlength="40" oninput="updateCharCount(this)">
+          <span class="char-count" id="pf-${i}-title-cc">${(p.title||'').length} / 40</span>
+        </div>
+        <div class="field">
+          <label>Client</label>
+          <input type="text" id="pf-${i}-client" value="${esc(p.client)}" maxlength="35" oninput="updateCharCount(this)">
+          <span class="char-count" id="pf-${i}-client-cc">${(p.client||'').length} / 35</span>
+        </div>
       </div>
       <div class="field-row">
         <div class="field"><label>Year</label><input type="text" id="pf-${i}-year" value="${esc(p.year)}"></div>
-        <div class="field"><label>Type / Category <span style="color:var(--text-dim);font-size:0.6rem">(max 25 for mobile)</span></label><input type="text" id="pf-${i}-type" value="${esc(p.type)}" maxlength="30"></div>
+        <div class="field">
+          <label>Type / Category</label>
+          <input type="text" id="pf-${i}-type" value="${esc(p.type)}" maxlength="30" oninput="updateCharCount(this)">
+          <span class="char-count" id="pf-${i}-type-cc">${(p.type||'').length} / 30</span>
+        </div>
       </div>
       <div class="field">
-        <label>Description <span style="color:var(--text-dim);font-size:0.6rem">(max 300)</span></label>
-        <textarea id="pf-${i}-desc" maxlength="300">${esc(p.description || p.desc || '')}</textarea>
+        <label>Description</label>
+        <textarea id="pf-${i}-desc" maxlength="300" oninput="updateCharCount(this)">${esc(p.description || p.desc || '')}</textarea>
+        <span class="char-count" id="pf-${i}-desc-cc">${(p.description||p.desc||'').length} / 300</span>
       </div>
       <div class="field-row">
         <div class="field">
@@ -807,9 +890,32 @@
         <div class="field-hint">Add multiple images/videos. If gallery has items, it replaces the single modal media above.</div>
       </div>
       <div class="field">
-        <label>Tags (comma-separated)</label>
-        <input type="text" id="pf-${i}-tags" value="${(p.tags||[]).join(', ')}">
-        <div class="field-hint">e.g. Enterprise, AI, Flint</div>
+        <label>Tags <span style="color:var(--text-dim);font-size:0.58rem">— max 3</span></label>
+        <div class="tag-current-pills" id="pf-${i}-tags-current">
+          ${(p.tags||[]).map(t => renderTagPillHTML(t)).join('')}
+        </div>
+        <div class="tag-picker-panel">
+          <div class="tag-picker-row">
+            <span class="tag-picker-label">Status</span>
+            ${Object.entries(STATUS_TAGS).map(([name, color]) =>
+              `<button type="button" class="tag-pill tag-pill--pick" style="background:${color}" onclick="pickTag(${i},'${esc(name)}','${color}')">${esc(name)}</button>`
+            ).join('')}
+          </div>
+          <div class="tag-picker-row" id="pf-${i}-type-row">
+            <span class="tag-picker-label">Type</span>
+            ${Object.entries(tagPalette).map(([name, def]) =>
+              `<button type="button" class="tag-pill tag-pill--pick" style="background:${esc(def.color)}" onclick="pickTag(${i},'${esc(name)}','${esc(def.color)}')">${esc(name)}</button>`
+            ).join('')}
+            <button type="button" class="tag-add-type-btn" onclick="toggleNewTypeForm(${i})">+ New type</button>
+          </div>
+          <div class="tag-new-type-form" id="pf-${i}-new-type">
+            <input type="text" id="pf-${i}-nt-name" placeholder="Tag name (e.g. XR)" autocomplete="off">
+            <input type="color" id="pf-${i}-nt-color" value="#3b82f6" title="Pick bubble color">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="addNewTypeTag(${i})">Add</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="toggleNewTypeForm(${i})" style="padding:0.3rem 0.5rem">✕</button>
+          </div>
+        </div>
+        <div class="field-hint">Click a tag to add it (max 3). Status = Active/Past/In-Dev. Type = AI, XR, etc.</div>
       </div>
       <div class="field">
         <label>Links / Buttons <span style="color:var(--text-dim);font-size:0.6rem">(shown in modal)</span></label>
@@ -845,7 +951,7 @@
     p.description = document.getElementById(`pf-${i}-desc`).value.trim();
     p.thumb       = document.getElementById(`pf-${i}-thumb`).value.trim();
     p.thumb_bg    = document.getElementById(`pf-${i}-thumbbg`).value;
-    p.link        = document.getElementById(`pf-${i}-link`).value.trim();
+    // p.link removed — legacy field, links array used instead
 
     // Collect gallery items
     const galContainer = document.getElementById(`pf-${i}-gallery`);
@@ -863,8 +969,10 @@
       src:  document.getElementById(`pf-${i}-mediasrc`).value.trim(),
       gallery: gallery.length > 0 ? gallery : undefined,
     };
-    const tagStr = document.getElementById(`pf-${i}-tags`).value;
-    p.tags = tagStr.split(',').map(t => t.trim()).filter(Boolean);
+
+    // Collect tags from pill elements
+    const tagsEl = document.getElementById(`pf-${i}-tags-current`);
+    p.tags = tagsEl ? Array.from(tagsEl.querySelectorAll('.tag-pill[data-tag]')).map(el => el.dataset.tag) : [];
 
     // Collect links (skip removed rows)
     const linksContainer = document.getElementById(`pf-${i}-links`);
@@ -878,11 +986,24 @@
     });
     p.links = links.length > 0 ? links : [];
 
-    // Save to Supabase immediately
-    await supaUpdate('projects', `id=eq.${p.id}`, p);
+    // Show saving state on button
+    const saveBtn = document.querySelector(`#edit-form-${i} .btn-primary`);
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+
+    const ok = await supaUpdate('projects', `id=eq.${p.id}`, p);
+    if (!ok) {
+      toast('Save failed — check connection.', 'error');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save changes'; }
+      return;
+    }
+
+    // Snapshot saved data, refresh list, inject preview
+    const savedP = { ...p, tags: [...(p.tags||[])], links: [...(p.links||[])] };
     editingIdx = null;
     renderProjectList();
-    toast('Project saved to database.', 'success');
+    const form = document.getElementById(`edit-form-${i}`);
+    if (form) { form.innerHTML = buildPreviewHTML(i, savedP); form.style.display = 'block'; }
+    toast('Saved.', 'success');
   }
 
   // Gallery helpers
@@ -1088,6 +1209,118 @@
 
   // Render submissions when navigating to the page
   document.querySelector('[data-page="submissions"]').addEventListener('click', renderSubmissions);
+
+  /* ============================================================ TAG SYSTEM */
+  function renderTagPillHTML(tagName) {
+    const color = STATUS_TAGS[tagName] || tagPalette[tagName]?.color || '#5a5040';
+    return `<span class="tag-pill" data-tag="${esc(tagName)}" style="background:${color}">${esc(tagName)}<button type="button" class="tag-pill-remove" onclick="removeTagPill(this)" title="Remove">×</button></span>`;
+  }
+
+  function pickTag(projIdx, name, color) {
+    const el = document.getElementById(`pf-${projIdx}-tags-current`);
+    if (!el) return;
+    const existing = el.querySelectorAll('.tag-pill[data-tag]');
+    if (existing.length >= 3) { toast('Max 3 tags per project.', ''); return; }
+    if (Array.from(existing).some(p => p.dataset.tag === name)) return;
+    el.insertAdjacentHTML('beforeend', renderTagPillHTML(name));
+  }
+
+  function removeTagPill(btn) {
+    btn.closest('.tag-pill').remove();
+  }
+
+  function toggleNewTypeForm(projIdx) {
+    const row = document.getElementById(`pf-${projIdx}-new-type`);
+    if (row) row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+  }
+
+  async function addNewTypeTag(projIdx) {
+    const nameInput  = document.getElementById(`pf-${projIdx}-nt-name`);
+    const colorInput = document.getElementById(`pf-${projIdx}-nt-color`);
+    const name  = nameInput?.value.trim();
+    const color = colorInput?.value || '#3b82f6';
+    if (!name) { toast('Enter a tag name.', ''); return; }
+    tagPalette[name] = { color };
+    await savePalette();
+    pickTag(projIdx, name, color);
+    // Append new pill to type row picker
+    const typeRow = document.getElementById(`pf-${projIdx}-type-row`);
+    if (typeRow) {
+      const addBtn = typeRow.querySelector('.tag-add-type-btn');
+      const pill = document.createElement('button');
+      pill.type = 'button';
+      pill.className = 'tag-pill tag-pill--pick';
+      pill.style.cssText = `background:${color}`;
+      pill.textContent = name;
+      pill.onclick = () => pickTag(projIdx, name, color);
+      typeRow.insertBefore(pill, addBtn);
+    }
+    toggleNewTypeForm(projIdx);
+    if (nameInput) nameInput.value = '';
+  }
+
+  async function savePalette() {
+    await supaUpsert('settings', [{ key: 'tag_palette', value: JSON.stringify(tagPalette) }]);
+  }
+
+  /* ============================================================ CARD PREVIEW */
+  function buildPreviewHTML(projIdx, p) {
+    const tags = p.tags || [];
+    const tagsHtml = tags.map(t => {
+      const color = STATUS_TAGS[t] || tagPalette[t]?.color || '#5a5040';
+      return `<span style="display:inline-flex;align-items:center;padding:0.14rem 0.55rem;border-radius:999px;background:${color};font-size:0.5rem;letter-spacing:0.09em;text-transform:uppercase;font-weight:600;color:#000;white-space:nowrap">${esc(t)}</span>`;
+    }).join('');
+    const bgStyle = p.thumb
+      ? `background:url(${p.thumb}) center/cover no-repeat`
+      : `background:${p.thumb_bg || '#181310'}`;
+    const cardInner = `
+      <div style="${bgStyle};min-height:190px;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="padding:1rem 0.9rem 1.2rem;background:linear-gradient(to top,rgba(12,11,9,0.97) 0%,rgba(12,11,9,0.45) 100%)">
+          <span style="display:block;font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:#8a8170;margin-bottom:0.35rem">${esc(p.type)}</span>
+          <span style="display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.05rem;font-weight:300;color:#eee8dc;line-height:1.2;margin-bottom:0.2rem">${esc(p.title)}</span>
+          <span style="display:block;font-size:0.62rem;color:#cdc4b1;margin-bottom:0.15rem">${esc(p.client)}</span>
+          <span style="display:block;font-size:0.5rem;letter-spacing:0.1em;color:#8a8170">${esc(p.year)}</span>
+          ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem;margin-top:0.55rem">${tagsHtml}</div>` : ''}
+        </div>
+      </div>`;
+    return `
+      <div style="background:var(--surface-hi);border:1px solid var(--border-accent);padding:1.2rem;margin-top:0.4rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.9rem;flex-wrap:wrap;gap:0.5rem">
+          <span style="font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent)">Card Preview — ${esc(p.title)}</span>
+          <div style="display:flex;gap:0.4rem;align-items:center">
+            <button class="preview-size-btn active" id="prev-desk-${projIdx}" onclick="setPreviewSize(${projIdx},'desktop')">Desktop</button>
+            <button class="preview-size-btn" id="prev-mob-${projIdx}" onclick="setPreviewSize(${projIdx},'mobile')">Mobile</button>
+            <button class="btn btn-ghost btn-sm" onclick="toggleEditProject(${projIdx})" style="margin-left:0.4rem;font-size:0.58rem">Edit again</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <div id="prev-wrap-${projIdx}" style="width:320px;transition:width 0.3s;overflow:hidden">
+            ${cardInner}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function setPreviewSize(projIdx, size) {
+    const wrap = document.getElementById(`prev-wrap-${projIdx}`);
+    const desk = document.getElementById(`prev-desk-${projIdx}`);
+    const mob  = document.getElementById(`prev-mob-${projIdx}`);
+    if (!wrap) return;
+    wrap.style.width = size === 'mobile' ? '160px' : '320px';
+    if (desk) desk.className = 'preview-size-btn' + (size === 'desktop' ? ' active' : '');
+    if (mob)  mob.className  = 'preview-size-btn' + (size === 'mobile'  ? ' active' : '');
+  }
+
+  /* ============================================================ CHAR COUNTER */
+  function updateCharCount(input) {
+    const max = parseInt(input.getAttribute('maxlength') || '0', 10);
+    if (!max) return;
+    const counter = input.parentElement.querySelector('.char-count');
+    if (!counter) return;
+    const len = input.value.length;
+    counter.textContent = `${len} / ${max}`;
+    counter.className = 'char-count' + (len >= max ? ' over' : len > max * 0.8 ? ' near' : '');
+  }
 
   /* ============================================================ UTILS */
   function esc(s) {
