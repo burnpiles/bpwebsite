@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "burnpiles",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["/tmp/bp_serve.py"],
+      "port": 3131
+    }
+  ]
+}
