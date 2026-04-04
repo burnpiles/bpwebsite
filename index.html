@@ -244,7 +244,7 @@
 
     .hero-wordmark {
       font-family: var(--font-body);
-      font-size: clamp(3rem, 9vw, 7.5rem);
+      font-size: clamp(3rem, 6.5vw, 5.5rem);
       font-weight: 300;
       letter-spacing: 0.25em;
       text-transform: uppercase;
@@ -296,7 +296,7 @@
     .hero-cta {
       display: inline-block;
       margin-top: clamp(1.5rem, 3.5vh, 2.8rem);
-      padding: 1.1rem 3rem;
+      padding: 0.9rem 2.4rem;
       background: rgba(12, 11, 9, 0.9);
       border: 1px solid var(--border-accent);
       color: var(--accent-bright);
@@ -493,7 +493,7 @@
     .hdiv-name {
       display: block;
       font-family: var(--font-display);
-      font-size: clamp(3rem, 5.5vw, 6rem);
+      font-size: clamp(3rem, 4vw, 4.5rem);
       font-weight: 300;
       letter-spacing: -0.04em;
       line-height: 0.9;
@@ -2218,10 +2218,9 @@
     <h2>The Burnpiles Newsletter</h2>
     <p>Signal, not noise. Delivered occasionally.</p>
     <div class="newsletter-posts" id="newsletter-posts" style="display:none"></div>
-    <iframe name="nl-hidden-frame" style="display:none"></iframe>
-    <form class="newsletter-form" id="newsletter-form" action="https://subscribe-forms.beehiiv.com/178cea31-9b4d-4202-8dfc-4d78cc2bcc71" method="POST" target="nl-hidden-frame">
-      <input type="email" name="email" class="newsletter-input" placeholder="you@company.com" required style="font-size:16px">
-      <button type="submit" class="newsletter-btn">Subscribe</button>
+    <form class="newsletter-form" id="newsletter-form" onsubmit="return false">
+      <input type="email" id="nl-email" class="newsletter-input" placeholder="you@company.com" required style="font-size:16px">
+      <button type="button" class="newsletter-btn" id="nl-submit-btn">Subscribe</button>
     </form>
     <p class="newsletter-status" id="newsletter-status"></p>
   </div>
@@ -3422,16 +3421,39 @@
     return JSON.parse(match[0]);
   }
 
-  /* ---- Newsletter subscribe ---- */
-  const nlForm = document.getElementById('newsletter-form');
+  /* ---- Newsletter subscribe via API route ---- */
+  const nlBtn = document.getElementById('nl-submit-btn');
+  const nlEmail = document.getElementById('nl-email');
   const nlStatus = document.getElementById('newsletter-status');
-  if (nlForm) {
-    nlForm.addEventListener('submit', () => {
-      setTimeout(() => {
-        nlStatus.textContent = "You're in. Welcome to the pile.";
-        nlStatus.style.color = '#4ade80';
-        nlForm.querySelector('input[name="email"]').value = '';
-      }, 500);
+  if (nlBtn) {
+    nlBtn.addEventListener('click', async () => {
+      const email = nlEmail.value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+        nlStatus.textContent = 'Please enter a valid email.';
+        nlStatus.style.color = '#e8e846';
+        return;
+      }
+      nlBtn.disabled = true;
+      nlBtn.textContent = '...';
+      try {
+        const res = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        if (res.ok) {
+          nlStatus.textContent = "You're in. Welcome to the pile.";
+          nlStatus.style.color = '#4ade80';
+          nlEmail.value = '';
+        } else {
+          throw new Error(res.status);
+        }
+      } catch (err) {
+        nlStatus.textContent = 'Something went wrong. Try again.';
+        nlStatus.style.color = '#e8e846';
+      }
+      nlBtn.disabled = false;
+      nlBtn.textContent = 'SUBSCRIBE';
     });
   }
 
