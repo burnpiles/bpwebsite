@@ -3587,7 +3587,7 @@
     const isMobile = W < 768;
     const isTablet = W >= 768 && W < 1200;
     const splashCfg = {
-      count: isMobile ? 120 : isTablet ? 250 : 500, speedMult: 1.6,
+      count: isMobile ? 80 : isTablet ? 150 : 400, speedMult: 1.6,
       glowColor: 'rgba(240, 100, 20, 0.9)',
       glowMid: 'rgba(220, 75, 15, 0.45)',
       coreColor: 'rgba(255, 220, 110, 1)',
@@ -3745,5 +3745,7 @@
   }
 
 </script>
+<!-- Vercel Web Analytics -->
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
