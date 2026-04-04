@@ -77,6 +77,20 @@
       padding: 0 clamp(1.5rem, 5vw, 4rem);
       transition: opacity 0.8s ease-out;
     }
+    #splash-bg {
+      position: absolute; inset: 0;
+      overflow: hidden;
+    }
+    #splash-bg img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    #splash-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(12, 11, 9, 0.8);
+      z-index: 1;
+    }
     #splash.done { opacity: 0; pointer-events: none; }
     #splash-canvas {
       position: absolute; inset: 0;
@@ -99,7 +113,7 @@
     }
     .splash-tagline {
       font-family: var(--font-mono);
-      font-size: clamp(0.85rem, 1.6vw, 1.1rem);
+      font-size: clamp(1.5rem, 3.2vw, 2.2rem);
       font-weight: 300;
       letter-spacing: 0.18em;
       text-transform: uppercase;
@@ -107,7 +121,7 @@
       margin-top: clamp(1rem, 2vh, 1.5rem);
       opacity: 0;
       animation: splashTextIn 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s forwards;
-      line-height: 1.8;
+      line-height: 1.6;
     }
     @keyframes splashTextIn {
       0%   { opacity: 0; transform: translateY(8px); filter: blur(4px); }
@@ -115,7 +129,7 @@
     }
     @media (max-width: 720px) {
       .splash-title { font-size: clamp(2rem, 11vw, 3.5rem); }
-      .splash-tagline { font-size: clamp(0.52rem, 2.8vw, 0.7rem); }
+      .splash-tagline { font-size: clamp(0.9rem, 4vw, 1.4rem); }
     }
     body.splash-active { overflow: hidden; }
     @media (prefers-reduced-motion: reduce) {
@@ -186,7 +200,9 @@
     }
     /* Hero background image (set via admin or JS) */
     .hero-bg {
-      position: absolute; inset: 0; z-index: 0;
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 65%; /* only covers the hero-top area, not services */
+      z-index: 0;
       overflow: hidden;
     }
     .hero-bg img {
@@ -384,9 +400,6 @@
       padding: clamp(1.5rem, 3vh, 2.5rem) clamp(1.5rem, 5vw, 4rem) 0;
       position: relative; z-index: 1;
       background: var(--bg);
-      /* Extend solid bg upward to cover gap above Our Services */
-      margin-top: -1px;
-      box-shadow: 0 -60px 0 0 var(--bg);
     }
 
     .hero-divisions {
@@ -1891,6 +1904,7 @@
 
 <!-- Splash screen -->
 <div id="splash" aria-hidden="true">
+  <div id="splash-bg"><img src="bpbackground.gif" alt="" loading="eager"></div>
   <canvas id="splash-canvas"></canvas>
   <div class="splash-content">
     <div class="splash-title">BURNPILES</div>
