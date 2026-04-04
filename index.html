@@ -317,6 +317,8 @@
     .hero-model-btn {
       margin-top: clamp(1rem, 2vh, 2rem);
       margin-bottom: clamp(1rem, 2vh, 1.5rem);
+      position: relative;
+      z-index: 2;
     }
     .work-build-btn {
       display: block;
@@ -346,12 +348,14 @@
        ========================================= */
     .divisions-head {
       padding: clamp(1.5rem, 3vh, 2.5rem) clamp(1.5rem, 5vw, 4rem) 0;
+      position: relative; z-index: 1;
     }
 
     .hero-divisions {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
     }
 
     .hdiv {
@@ -589,6 +593,7 @@
       flex: 1;
       display: flex; flex-direction: column;
       justify-content: center;
+      padding-bottom: 15vh;
     }
 
     .work-head { margin-bottom: clamp(3rem, 6vh, 5rem); }
