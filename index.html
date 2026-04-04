@@ -1755,6 +1755,13 @@
       border-radius: 0;
     }
     .newsletter-btn:hover { background: var(--accent-bright); }
+    .newsletter-embed {
+      display: flex;
+      justify-content: center;
+      margin: 0 auto;
+      max-width: 560px;
+    }
+
     .newsletter-status {
       font-family: var(--font-body);
       font-size: 0.68rem;
@@ -2170,7 +2177,7 @@
 
       </div><!-- /intake-shell -->
       <button class="reset-btn" id="reset-btn">Start over ↺</button>
-      <a href="#origin" class="anchor-btn" style="margin-top:2rem">Why Burnpiles? ↓</a>
+      <a href="#origin" class="anchor-btn" style="margin-top:2rem">Origin Story ↓</a>
     </div>
   </section>
 
@@ -2211,11 +2218,10 @@
     <h2>The Burnpiles Newsletter</h2>
     <p>Signal, not noise. Delivered occasionally.</p>
     <div class="newsletter-posts" id="newsletter-posts" style="display:none"></div>
-    <form class="newsletter-form" id="newsletter-form" onsubmit="return false">
-      <input type="email" id="nl-email" class="newsletter-input" placeholder="you@company.com" required style="font-size:16px">
-      <button type="button" class="newsletter-btn" id="nl-submit-btn">Subscribe</button>
-    </form>
-    <p class="newsletter-status" id="newsletter-status"></p>
+    <div class="newsletter-embed">
+      <script async src="https://subscribe-forms.beehiiv.com/embed.js"></script>
+      <iframe src="https://subscribe-forms.beehiiv.com/178cea31-9b4d-4202-8dfc-4d78cc2bcc71" class="beehiiv-embed" data-test-id="beehiiv-embed" frameborder="0" scrolling="no" style="width:100%;max-width:560px;height:52px;margin:0;border-radius:0;background-color:transparent;"></iframe>
+    </div>
   </div>
 </section>
 
@@ -3414,25 +3420,7 @@
     return JSON.parse(match[0]);
   }
 
-  /* ---- Newsletter subscribe ---- */
-  const nlBtn = document.getElementById('nl-submit-btn');
-  const nlEmail = document.getElementById('nl-email');
-  const nlStatus = document.getElementById('newsletter-status');
-  if (nlBtn) {
-    nlBtn.addEventListener('click', () => {
-      const email = nlEmail.value.trim();
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-        nlStatus.textContent = 'Please enter a valid email.';
-        nlStatus.style.color = '#e8e846';
-        return;
-      }
-      // Open Beehiiv subscribe with email pre-filled
-      window.open(`https://burnpiles.beehiiv.com/subscribe?email=${encodeURIComponent(email)}`, '_blank');
-      nlStatus.textContent = "Complete signup in the new tab — then you're in.";
-      nlStatus.style.color = '#4ade80';
-      nlEmail.value = '';
-    });
-  }
+  /* ---- Newsletter: handled by Beehiiv embed iframe ---- */
 
   /* ---- Splash screen ---- */
   (function initSplash() {
