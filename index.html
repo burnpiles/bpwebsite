@@ -3068,6 +3068,10 @@
     const rb = document.getElementById('reset-btn');
     if (id === 'step-0') rb.classList.remove('visible');
     else rb.classList.add('visible');
+    // Scroll intake heading into view on step change
+    setTimeout(() => {
+      document.getElementById('intake-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
   }
 
   /* Word count feedback */
