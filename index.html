@@ -2459,6 +2459,69 @@
           a.textContent = s.email;
         });
       }
+      // Hero copy
+      if (s.hero_eyebrow) {
+        document.querySelectorAll('.hero-eyebrow').forEach(el => el.textContent = s.hero_eyebrow);
+      }
+      if (s.hero_sub) {
+        document.querySelectorAll('.hero-sub').forEach(el => el.textContent = s.hero_sub);
+      }
+      if (s.hero_cta) {
+        document.querySelectorAll('a.hero-cta').forEach(el => {
+          // preserve the arrow if not included
+          const arrow = el.textContent.includes('→') && !s.hero_cta.includes('→') ? ' →' : '';
+          el.textContent = s.hero_cta + arrow;
+        });
+      }
+      // Service cards — Flint
+      if (s.flint_purpose) document.querySelectorAll('[data-div="flint"] .hdiv-purpose').forEach(el => el.textContent = s.flint_purpose);
+      if (s.flint_desc)    document.querySelectorAll('[data-div="flint"] .hdiv-desc').forEach(el => el.textContent = s.flint_desc);
+      if (s.flint_pricing) document.querySelectorAll('[data-div="flint"] .hdiv-pricing').forEach(el => el.textContent = s.flint_pricing);
+      // Service cards — Forge
+      if (s.forge_purpose) document.querySelectorAll('[data-div="forge"] .hdiv-purpose').forEach(el => el.textContent = s.forge_purpose);
+      if (s.forge_desc)    document.querySelectorAll('[data-div="forge"] .hdiv-desc').forEach(el => el.textContent = s.forge_desc);
+      if (s.forge_pricing) document.querySelectorAll('[data-div="forge"] .hdiv-pricing').forEach(el => el.textContent = s.forge_pricing);
+      // Service cards — Fuel
+      if (s.fuel_purpose) document.querySelectorAll('[data-div="fuel"] .hdiv-purpose').forEach(el => el.textContent = s.fuel_purpose);
+      if (s.fuel_desc)    document.querySelectorAll('[data-div="fuel"] .hdiv-desc').forEach(el => el.textContent = s.fuel_desc);
+      if (s.fuel_pricing) document.querySelectorAll('[data-div="fuel"] .hdiv-pricing').forEach(el => el.textContent = s.fuel_pricing);
+      // Origin story
+      if (s.origin_heading) {
+        const oh = document.querySelector('.origin-content h2');
+        if (oh) oh.textContent = s.origin_heading;
+      }
+      if (s.origin_body) {
+        const ot = document.querySelector('.origin-text');
+        if (ot) {
+          ot.innerHTML = s.origin_body
+            .split(/\n\n+/)
+            .map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`)
+            .join('');
+        }
+      }
+      // Meta tags
+      if (s.meta_description) {
+        const m = document.querySelector('meta[name="description"]');
+        if (m) m.content = s.meta_description;
+      }
+      if (s.meta_og_title) {
+        const m = document.querySelector('meta[property="og:title"]');
+        if (m) m.content = s.meta_og_title;
+      }
+      if (s.meta_og_desc) {
+        const m = document.querySelector('meta[property="og:description"]');
+        if (m) m.content = s.meta_og_desc;
+      }
+      // Newsletter section background
+      if ('newsletter_bg' in s) {
+        const nl = document.getElementById('newsletter');
+        if (nl) {
+          nl.style.backgroundImage = s.newsletter_bg ? `url('${s.newsletter_bg}')` : '';
+          nl.style.backgroundSize  = s.newsletter_bg ? 'cover' : '';
+          nl.style.backgroundPosition = s.newsletter_bg ? 'center' : '';
+          nl.style.backgroundRepeat   = s.newsletter_bg ? 'no-repeat' : '';
+        }
+      }
     }).catch(e => console.warn('Supabase settings error:', e));
 
     // Beehiiv — fetch latest posts
