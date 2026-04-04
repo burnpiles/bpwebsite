@@ -1883,7 +1883,7 @@
         <div class="hdiv-content">
           <span class="hdiv-name orange-3">Fuel</span>
           <span class="hdiv-purpose">Resourcing</span>
-          <span class="hdiv-desc">You have your idea and maybe a prototype, but you need a team. We build the team for you.</span>
+          <span class="hdiv-desc">You have an idea and maybe a prototype, but you need a team. We build your team.</span>
           <span class="hdiv-pricing">Custom Quote</span>
         </div>
       </div>
@@ -2223,6 +2223,14 @@
       });
     }
 
+    // Social share image
+    if (cfg.ogImage) {
+      const ogMeta = document.querySelector('meta[property="og:image"]');
+      const twMeta = document.querySelector('meta[name="twitter:image"]');
+      if (ogMeta) ogMeta.content = cfg.ogImage;
+      if (twMeta) twMeta.content = cfg.ogImage;
+    }
+
     // Origin story image
     if (cfg.originImage) {
       const originMedia = document.querySelector('.origin-media');
@@ -2469,7 +2477,7 @@
       label: 'Prototype',
       name: 'Forge',
       nameAccent: true,
-      tagline: 'We build a prototype based on your needs. Includes 1x ideation sync — prototype within 5 business days.',
+      tagline: 'We build a prototype based on your needs. Includes an ideation sync and working prototype.',
       about: "Forge is the build arm. You tell us what you need, we sync once to align, then we go build it. You get a working prototype — not a pitch deck, not a wireframe. Something real you can show, test, and iterate on.",
       services: [
         'Rapid prototyping (5 business days)',
@@ -2486,7 +2494,7 @@
       label: 'Resourcing',
       name: 'Fuel',
       nameAccent: false,
-      tagline: 'You have your idea and maybe a prototype, but you need a team. We build the team for you.',
+      tagline: 'You have an idea and maybe a prototype, but you need a team. We build your team.',
       about: "Fuel is talent. You have the direction and the management bandwidth — you just need the right people. We source, vet, and place specialists directly into your team. You run the work. We find the people.",
       services: [
         'Specialist placement (contract & permanent)',

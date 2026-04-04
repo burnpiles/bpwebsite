@@ -350,7 +350,12 @@
         </div>
         <div class="field-hint">Get these from your Beehiiv dashboard → Settings → Integrations. Shows latest 3 newsletters on the site.</div>
 
-        <h3 style="margin-top:2rem;font-family:var(--font-mono);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent)">Origin Story</h3>
+        <h3 style="margin-top:2rem;font-family:var(--font-mono);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent)">Branding</h3>
+        <div class="field">
+          <label>Social Share Image URL (1200x630 PNG)</label>
+          <input type="url" id="s-og-image" placeholder="https://… (shown when sharing on iMessage, Twitter, Slack, etc.)">
+          <div class="field-hint">Must be a PNG or JPG at 1200x630px. SVGs won't work. Host on Imgur, Cloudflare, etc.</div>
+        </div>
         <div class="field">
           <label>Ed Turner Photo URL</label>
           <input type="url" id="s-origin-img" placeholder="https://… (image URL for the origin story section)">
@@ -470,6 +475,7 @@
     apiKey:     '',
     beehiivApiKey: '',
     beehiivPubId:  'pub_52423244-f79b-4c0f-805b-a6e7757dd803',
+    ogImage:       '',
     originImage:   '',
     social: {
       instagram: 'https://instagram.com/burnpiles',
@@ -555,6 +561,7 @@
     document.getElementById('s-apikey').value    = cfg.apiKey    || '';
     document.getElementById('s-beehiiv-apikey').value = cfg.beehiivApiKey || '';
     document.getElementById('s-beehiiv-pubid').value  = cfg.beehiivPubId  || '';
+    document.getElementById('s-og-image').value       = cfg.ogImage       || '';
     document.getElementById('s-origin-img').value     = cfg.originImage   || '';
     document.getElementById('sc-instagram').value = cfg.social?.instagram || '';
     document.getElementById('sc-x').value         = cfg.social?.x         || '';
@@ -568,6 +575,7 @@
     cfg.apiKey       = document.getElementById('s-apikey').value.trim();
     cfg.beehiivApiKey = document.getElementById('s-beehiiv-apikey').value.trim();
     cfg.beehiivPubId  = document.getElementById('s-beehiiv-pubid').value.trim();
+    cfg.ogImage       = document.getElementById('s-og-image').value.trim();
     cfg.originImage   = document.getElementById('s-origin-img').value.trim();
     saveConfig();
     toast('Settings saved.', 'success');
