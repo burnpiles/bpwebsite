@@ -81,8 +81,44 @@
     }
     .topbar-brand span { color: var(--accent); }
     .topbar-right { display: flex; align-items: center; gap: 1rem; }
-    .topbar-status { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+    .topbar-status-wrap { position: relative; }
+    .topbar-status {
+      font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--text-dim); background: none; border: none;
+      font-family: var(--font-mono); padding: 0; cursor: default;
+    }
     .topbar-status.saved { color: var(--success); }
+    .topbar-status.dirty {
+      color: var(--accent-bright); border: 1px solid var(--border-accent);
+      padding: 0.25rem 0.65rem; cursor: pointer; transition: background 0.15s;
+    }
+    .topbar-status.dirty:hover { background: var(--accent-glow); }
+    #unsaved-panel {
+      position: absolute; top: calc(100% + 0.6rem); right: 0;
+      background: var(--surface-hi); border: 1px solid var(--border-mid);
+      min-width: 260px; z-index: 200; padding: 1.25rem;
+    }
+    .up-header {
+      font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 0.75rem;
+    }
+    .up-list { list-style: none; margin-bottom: 1rem; }
+    .up-list li {
+      font-size: 0.78rem; color: var(--text-muted);
+      padding: 0.35rem 0; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .up-list li::before { content: '·'; color: var(--accent); font-size: 1.2rem; line-height: 1; }
+    .up-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+    .up-btn {
+      background: none; font-family: var(--font-mono); font-size: 0.58rem;
+      letter-spacing: 0.12em; text-transform: uppercase; padding: 0.4rem 0.8rem;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .up-discard { border: 1px solid var(--border); color: var(--text-muted); }
+    .up-discard:hover { border-color: var(--border-mid); color: var(--text); }
+    .up-save { border: 1px solid var(--border-accent); color: var(--accent-bright); }
+    .up-save:hover { background: var(--accent-glow); }
     .btn-logout {
       background: none; border: 1px solid var(--border);
       color: var(--text-muted); font-family: var(--font-mono); font-size: 0.62rem;
@@ -355,7 +391,17 @@
   <div class="topbar">
     <span class="topbar-brand">Burnpiles<span>.</span> Admin</span>
     <div class="topbar-right">
-      <span class="topbar-status" id="save-status">unsaved changes</span>
+      <div class="topbar-status-wrap">
+        <button class="topbar-status saved" id="save-status" onclick="toggleUnsavedPanel()">saved</button>
+        <div id="unsaved-panel" hidden>
+          <div class="up-header">Pending changes</div>
+          <ul class="up-list" id="up-list"></ul>
+          <div class="up-actions">
+            <button class="up-btn up-discard" onclick="discardChanges()">Discard</button>
+            <button class="up-btn up-save" onclick="saveChanges()">Save all</button>
+          </div>
+        </div>
+      </div>
       <a href="index.html" target="_blank" class="preview-link">↗ View site</a>
       <button class="btn-logout" onclick="logout()">Log out</button>
     </div>
@@ -715,11 +761,78 @@
     updateSaveStatus(true);
   }
 
-  function updateSaveStatus(saved) {
-    const el = document.getElementById('save-status');
-    el.textContent = saved ? 'saved' : 'unsaved changes';
-    el.className = 'topbar-status' + (saved ? ' saved' : '');
+  let dirtyItems = []; // { label, saveFn, discardFn }
+  let portfolioOrderSnapshot = null;
+
+  function markDirty(label, saveFn, discardFn) {
+    if (!dirtyItems.find(d => d.label === label)) dirtyItems.push({ label, saveFn, discardFn });
+    _refreshUnsavedUI();
   }
+
+  function _refreshUnsavedUI() {
+    const list = document.getElementById('up-list');
+    if (list) list.innerHTML = dirtyItems.map(d => `<li>${d.label}</li>`).join('');
+    const el = document.getElementById('save-status');
+    if (dirtyItems.length) {
+      el.textContent = 'unsaved changes';
+      el.className = 'topbar-status dirty';
+    } else {
+      el.textContent = 'saved';
+      el.className = 'topbar-status saved';
+      document.getElementById('unsaved-panel').hidden = true;
+    }
+  }
+
+  function toggleUnsavedPanel() {
+    if (!dirtyItems.length) return;
+    const panel = document.getElementById('unsaved-panel');
+    panel.hidden = !panel.hidden;
+  }
+
+  function closeUnsavedPanel() {
+    const panel = document.getElementById('unsaved-panel');
+    if (panel) panel.hidden = true;
+  }
+
+  async function saveChanges() {
+    for (const item of [...dirtyItems]) await item.saveFn();
+    dirtyItems = [];
+    portfolioOrderSnapshot = null;
+    _refreshUnsavedUI();
+    closeUnsavedPanel();
+  }
+
+  function discardChanges() {
+    for (const item of [...dirtyItems]) item.discardFn();
+    dirtyItems = [];
+    portfolioOrderSnapshot = null;
+    _refreshUnsavedUI();
+    closeUnsavedPanel();
+  }
+
+  function discardPortfolioOrder() {
+    if (portfolioOrderSnapshot) {
+      supaProjects = JSON.parse(JSON.stringify(portfolioOrderSnapshot));
+      portfolioOrderSnapshot = null;
+      renderProjectList();
+    }
+  }
+
+  function updateSaveStatus(saved) {
+    if (saved) {
+      dirtyItems = dirtyItems.filter(d => d.label !== '_legacy');
+    }
+    _refreshUnsavedUI();
+  }
+
+  // Close unsaved panel on outside click
+  document.addEventListener('click', e => {
+    const panel = document.getElementById('unsaved-panel');
+    if (panel && !panel.hidden) {
+      const wrap = document.querySelector('.topbar-status-wrap');
+      if (wrap && !wrap.contains(e.target)) panel.hidden = true;
+    }
+  });
 
   /* ============================================================ NAV */
   document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
@@ -1145,8 +1258,9 @@
     const projects = getProjects();
     const j = i + dir;
     if (j < 0 || j >= projects.length) return;
+    if (!portfolioOrderSnapshot) portfolioOrderSnapshot = JSON.parse(JSON.stringify(supaProjects));
     [projects[i], projects[j]] = [projects[j], projects[i]];
-    updateSaveStatus(false);
+    markDirty('Portfolio order', savePortfolio, discardPortfolioOrder);
     renderProjectList();
   }
 
@@ -1156,6 +1270,10 @@
       supaProjects[i].sort_order = i + 1;
     }
     await supaUpsert('projects', supaProjects);
+    portfolioOrderSnapshot = null;
+    dirtyItems = dirtyItems.filter(d => d.label !== 'Portfolio order');
+    _refreshUnsavedUI();
+    closeUnsavedPanel();
     toast('Portfolio saved to database.', 'success');
   }
 
