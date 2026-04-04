@@ -2371,6 +2371,11 @@
   // Fast sync read of admin config for feature flags (ember on/off, bg on/off)
   const _adminCfg = (() => { try { return JSON.parse(localStorage.getItem('bp_admin') || '{}'); } catch(e) { return {}; } })();
 
+  // Module-level kill switches — Supabase loader can flip these off after async fetch
+  // (handles incognito / no localStorage where _adminCfg is always empty)
+  let _heroEmberAllowed = _adminCfg.heroEmberEnabled !== false;
+  let _workEmberAllowed = _adminCfg.workEmberEnabled !== false;
+
   /* ============================================================
      ADMIN OVERRIDES — load from localStorage (set by admin.html)
      ============================================================ */
@@ -2449,6 +2454,11 @@
       if (s.calendly_url) {
         document.querySelectorAll('a[href*="calendly.com"]').forEach(a => a.href = s.calendly_url);
       }
+      // Ember kill switches — override module-level flags from Supabase
+      // (catches incognito / no localStorage where _adminCfg defaults to all-on)
+      if (s.hero_ember_enabled === '0') _heroEmberAllowed = false;
+      if (s.work_ember_enabled === '0') _workEmberAllowed = false;
+
       // Hero divisions background — update CSS var; respect enabled toggle
       if ('hero_bg' in s) {
         const bgOn = s.hero_bg_enabled !== '0';
@@ -2750,7 +2760,7 @@
     }, { threshold: 0.05 }).observe(workEl);
 
     (function workEmberLoop() {
-      if (workRunning) workEmber.tick();
+      if (workRunning && _workEmberAllowed) workEmber.tick();
       requestAnimationFrame(workEmberLoop);
     }());
 
@@ -2807,7 +2817,7 @@
     }, { threshold: 0.05 }).observe(heroEl);
 
     (function heroEmberLoop() {
-      if (heroRunning) heroEmber.tick();
+      if (heroRunning && _heroEmberAllowed) heroEmber.tick();
       requestAnimationFrame(heroEmberLoop);
     }());
 
