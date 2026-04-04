@@ -168,10 +168,10 @@
 
     .hero-eyebrow {
       font-family: var(--font-mono);
-      font-size: clamp(0.6rem, 1.1vw, 0.75rem);
-      letter-spacing: 0.22em;
+      font-size: clamp(0.72rem, 1.3vw, 0.88rem);
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: var(--accent-bright);
+      color: #f59542;
       margin-bottom: clamp(1.2rem, 2.5vh, 2rem);
     }
 
@@ -274,6 +274,18 @@
     @keyframes modelBtnPulse {
       0%, 100% { opacity: 0.6; transform: translateY(0); }
       50% { opacity: 1; transform: translateY(3px); }
+    }
+    .flywheel-work-btn {
+      display: block;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 1.5rem 0 0.5rem;
+      animation: modelBtnPulse 2s ease-in-out infinite;
     }
 
     /* =========================================
@@ -1824,6 +1836,8 @@
         </div>
         <div class="path-result" id="path-result" aria-live="polite"></div>
       </div>
+
+      <a href="#work" class="flywheel-work-btn">Our Work ↓</a>
 
     </div>
   </section>
