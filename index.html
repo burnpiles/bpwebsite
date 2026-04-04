@@ -2819,15 +2819,15 @@
   document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
   document.querySelectorAll('.hdiv').forEach(el => ro.observe(el));
 
-  /* ---- Anchor smooth scroll (force JS scroll for all hash links) ---- */
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', e => {
-      const target = document.querySelector(a.getAttribute('href'));
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
+  /* ---- Anchor smooth scroll (delegated — works for dynamic links too) ---- */
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
 
   /* ---- Hero parallax ---- */
