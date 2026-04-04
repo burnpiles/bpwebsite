@@ -88,13 +88,13 @@
        SPLASH SCREEN
        ========================================= */
     #splash {
-      position: fixed; inset: 0; z-index: 10000;
+      position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 10000;
       background: #0c0b09;
       display: flex; align-items: center; justify-content: center;
       transition: opacity 0.8s ease-out;
     }
     #splash-bg {
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       overflow: hidden;
     }
     #splash-bg img {
@@ -103,13 +103,13 @@
     }
     #splash-bg::after {
       content: '';
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       background: rgba(12, 11, 9, 0.8);
       z-index: 1;
     }
     #splash.done { opacity: 0; pointer-events: none; }
     #splash-canvas {
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       width: 100%; height: 100%;
     }
     .splash-content {
@@ -165,7 +165,7 @@
     /* Film grain texture overlay */
     body::before {
       content: '';
-      position: fixed; inset: 0; z-index: 9999;
+      position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 9999;
       pointer-events: none;
       opacity: 0.035;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -228,7 +228,7 @@
     }
     /* Full-hero ember canvas — sits at z:1, hero content at z:2+ */
     #hero-canvas {
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 1;
       pointer-events: none;
@@ -238,13 +238,13 @@
     /* Controlled via --divisions-bg CSS var set by JS from admin; defaults to bundled GIF */
     .hero-divisions::before {
       content: '';
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       z-index: 0;
       background: var(--divisions-bg, url('media/bpbackground.gif') center/cover no-repeat);
     }
     .hero-divisions::after {
       content: '';
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       background: rgba(12, 11, 9, 0.80);
       z-index: 1;
     }
@@ -512,7 +512,7 @@
     .hdiv:hover::after { opacity: 1; }
 
     .hdiv-canvas {
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       width: 100%; height: 100%;
       pointer-events: none;
       z-index: 1;
@@ -687,7 +687,7 @@
       position: relative;
     }
     #work-canvas {
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 0;
       pointer-events: none;
@@ -767,7 +767,7 @@
     .work-card:hover .card-thumb img { transform: scale(1.04); opacity: 1; }
 
     .card-placeholder {
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       display: flex; align-items: center; justify-content: center;
     }
     .card-placeholder-num {
@@ -787,7 +787,7 @@
     /* Dark overlay behind text when card has background image */
     .work-card[data-bg] .card-body::before {
       content: '';
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       background: rgba(12, 11, 9, 0.82);
       z-index: -1;
     }
@@ -829,7 +829,7 @@
 
     /* ---- Work Modal ---- */
     #work-modal {
-      position: fixed; inset: 0; z-index: 9000;
+      position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 9000;
       background: rgba(7, 6, 4, 0.92);
       display: flex; align-items: center; justify-content: center;
       padding: clamp(1rem, 4vw, 3rem);
@@ -870,7 +870,7 @@
       width: 100%; height: 100%; object-fit: cover; display: block; border: none;
     }
     .modal-placeholder {
-      position: absolute; inset: 0;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 0.6rem;
     }
@@ -1792,7 +1792,7 @@
     #newsletter::before {
       content: '';
       position: absolute;
-      inset: 0;
+      top: 0; right: 0; bottom: 0; left: 0;
       background: rgba(0, 0, 0, 0.90);
       z-index: 0;
       pointer-events: none;
@@ -2759,7 +2759,7 @@
   }
 
   // ---- Work section ember canvas ----
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && _adminCfg.workEmberEnabled !== false) {
+  try { if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && _adminCfg.workEmberEnabled !== false) {
     const workCanvas = document.getElementById('work-canvas');
     const workEl     = document.getElementById('work');
     const _wMobile   = window.innerWidth < 768;
@@ -2801,11 +2801,11 @@
       workEmber.W = workCanvas.width;
       workEmber.H = workCanvas.height;
     });
-  }
+  } } catch(e) { /* ember unavailable on this device */ }
 
   // ---- Full-hero ember canvas — start immediately so it's running when splash fades ----
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!prefersReducedMotion && _adminCfg.heroEmberEnabled !== false) {
+  try { if (!prefersReducedMotion && _adminCfg.heroEmberEnabled !== false) {
     const heroCanvas = document.getElementById('hero-canvas');
     const heroEl     = document.getElementById('hero');
     const _isMobile  = window.innerWidth < 768;
@@ -2863,7 +2863,7 @@
       }, 120);
     });
 
-  }
+  } } catch(e) { /* ember unavailable on this device */ }
 
   /* ============================================================
      DIVISION MODALS — Flint / Forge / Fuel
