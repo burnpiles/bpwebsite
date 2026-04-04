@@ -259,22 +259,46 @@
       opacity: 0.25;
     }
 
-    /* Mobile-only model button */
-    .hero-model-btn {
-      display: none;
+    /* Anchor buttons — consistent outlined style */
+    .anchor-btn {
+      display: block;
       text-align: center;
       font-family: var(--font-mono);
-      font-size: 0.58rem;
+      font-size: 0.6rem;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--accent-bright);
       text-decoration: none;
-      padding: 0.8rem;
-      animation: modelBtnPulse 2s ease-in-out infinite;
+      padding: 0.75rem 2rem;
+      border: 1px solid var(--border-accent);
+      max-width: 280px;
+      margin: 0 auto;
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+      animation: anchorPulse 2.5s ease-in-out infinite;
     }
-    @keyframes modelBtnPulse {
-      0%, 100% { opacity: 0.6; transform: translateY(0); }
-      50% { opacity: 1; transform: translateY(3px); }
+    .anchor-btn:hover {
+      background: var(--accent-glow);
+      color: var(--text);
+      border-color: var(--accent-bright);
+    }
+    @keyframes anchorPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(196, 87, 26, 0); }
+      50% { box-shadow: 0 0 15px 2px rgba(196, 87, 26, 0.12); }
+    }
+    /* Light bg variant */
+    .anchor-btn--light {
+      color: var(--accent);
+      border-color: rgba(196, 87, 26, 0.3);
+    }
+    .anchor-btn--light:hover {
+      background: rgba(196, 87, 26, 0.06);
+      color: #1a1812;
+      border-color: var(--accent);
+    }
+
+    /* Mobile-only model button */
+    .hero-model-btn {
+      display: none;
     }
     .work-build-btn {
       display: block;
@@ -296,16 +320,7 @@
     .work-build-btn:hover { background: var(--accent-glow); color: var(--text); }
 
     .flywheel-work-btn {
-      display: block;
-      text-align: center;
-      font-family: var(--font-mono);
-      font-size: 0.58rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--accent);
-      text-decoration: none;
-      padding: 1.5rem 0 0.5rem;
-      animation: modelBtnPulse 2s ease-in-out infinite;
+      margin-top: clamp(1.5rem, 3vh, 2.5rem);
     }
 
     /* =========================================
@@ -491,7 +506,7 @@
       .hdiv-name { font-size: 1.8rem; }
       .hdiv-purpose { font-size: 0.6rem; }
       .hero-divisions { padding-bottom: 0; border-bottom: none; flex: 0; }
-      .hero-model-btn { display: block; margin-top: auto; padding: 0.8rem 0; }
+      .hero-model-btn { display: block; margin-top: 1rem; margin-bottom: 1rem; }
       /* Flywheel fits one screen on mobile */
       #flywheel {
         padding-top: 1.5rem;
@@ -1814,7 +1829,7 @@
 
     </div>
 
-    <a href="#flywheel" class="hero-model-btn">Our Model ↓</a>
+    <a href="#flywheel" class="anchor-btn hero-model-btn">Our Model ↓</a>
 
   </section>
 
@@ -1878,7 +1893,7 @@
         <div class="path-result" id="path-result" aria-live="polite"></div>
       </div>
 
-      <a href="#work" class="flywheel-work-btn">Our Work ↓</a>
+      <a href="#work" class="anchor-btn anchor-btn--light flywheel-work-btn">Our Work ↓</a>
 
     </div>
   </section>
@@ -1941,7 +1956,7 @@
     <div class="wrap">
       <div class="intake-head reveal">
         <h2 id="intake-title">What can we build?</h2>
-        <p class="intake-sub"><span style="color:var(--accent-bright)">Tell us about you and answer 3 questions.</span><br>Then we'll find the signal.</p>
+        <p class="intake-sub"><span style="color:var(--accent-bright)">A little about you, then three quick questions.</span><br>Then we'll find the signal.</p>
       </div>
 
       <!-- Progress bar -->
