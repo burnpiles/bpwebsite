@@ -3155,9 +3155,13 @@
     const rb = document.getElementById('reset-btn');
     if (id === 'step-0') rb.classList.remove('visible');
     else rb.classList.add('visible');
-    // Scroll intake heading into view on step change
+    // Scroll to exact same position on every step change
     setTimeout(() => {
-      document.getElementById('intake-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const el = document.getElementById('intake');
+      if (el) {
+        const top = el.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
     }, 150);
   }
 
