@@ -59,7 +59,7 @@
     body {
       background-color: var(--bg);
       color: var(--text);
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-weight: 300;
       line-height: 1.8;
       -webkit-font-smoothing: antialiased;
@@ -745,11 +745,11 @@
       color: var(--text); margin-top: 0.25rem;
     }
     .card-client {
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-size: 0.84rem; color: var(--text);
     }
     .card-year {
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-size: 0.74rem; color: var(--text);
       margin-top: auto; padding-top: 0.6rem;
     }
@@ -831,10 +831,10 @@
       flex-wrap: wrap; margin-bottom: 1.1rem;
     }
     .modal-client {
-      font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);
+      font-family: var(--font-body); font-size: 0.8rem; color: var(--text-muted);
     }
     .modal-year {
-      font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim);
+      font-family: var(--font-body); font-size: 0.72rem; color: var(--text-dim);
       border: 1px solid var(--border); padding: 0.12rem 0.45rem;
     }
     .modal-tags {
@@ -847,7 +847,7 @@
       padding: 0.18rem 0.5rem;
     }
     .modal-desc {
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-size: clamp(0.78rem, 1.2vw, 0.86rem);
       line-height: 1.82; color: var(--text); flex: 1;
     }
@@ -1196,7 +1196,7 @@
       background: #fff;
       border: 1px solid rgba(26, 24, 18, 0.12);
       color: rgba(26, 24, 18, 0.6);
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-size: clamp(0.68rem, 1.1vw, 0.76rem);
       letter-spacing: 0.06em;
       padding: 0.85rem 1rem;
@@ -1237,7 +1237,7 @@
       flex-shrink: 0;
     }
     .path-answer-text {
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-size: clamp(0.75rem, 1.1vw, 0.82rem);
       line-height: 1.75;
       color: rgba(26, 24, 18, 0.65);
@@ -1302,7 +1302,7 @@
     .origin-label { margin-bottom: 2rem; }
 
     .origin-text {
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-size: clamp(0.82rem, 1.5vw, 0.95rem);
       font-weight: 300;
       line-height: 1.75;
@@ -1379,7 +1379,7 @@
 
     /* Step 1 */
     .step1-label {
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-size: clamp(0.78rem, 1.2vw, 0.88rem);
       color: var(--text);
       display: block;
@@ -1393,7 +1393,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text);
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-weight: 300;
       font-size: 16px; /* prevents iOS zoom */
       line-height: 1.75;
@@ -1492,7 +1492,7 @@
     }
 
     .q-text {
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-size: clamp(0.82rem, 1.3vw, 0.92rem);
       font-weight: 400;
       line-height: 1.5;
@@ -1508,7 +1508,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text-muted);
-      font-family: var(--font-mono);
+      font-family: var(--font-body);
       font-weight: 300;
       font-size: clamp(0.75rem, 1.2vw, 0.82rem);
       line-height: 1.5;
@@ -3419,48 +3419,18 @@
   const nlEmail = document.getElementById('nl-email');
   const nlStatus = document.getElementById('newsletter-status');
   if (nlBtn) {
-    nlBtn.addEventListener('click', async () => {
+    nlBtn.addEventListener('click', () => {
       const email = nlEmail.value.trim();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
         nlStatus.textContent = 'Please enter a valid email.';
         nlStatus.style.color = '#e8e846';
         return;
       }
-      // Try Beehiiv API if key is available
-      let cfg;
-      try { cfg = JSON.parse(localStorage.getItem('bp_admin') || 'null'); } catch(e) {}
-      if (cfg?.beehiivApiKey && cfg?.beehiivPubId) {
-        nlBtn.disabled = true;
-        nlBtn.textContent = '...';
-        try {
-          const res = await fetch(`https://api.beehiiv.com/v2/publications/${cfg.beehiivPubId}/subscriptions`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${cfg.beehiivApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, reactivate_existing: true, utm_source: 'burnpiles.com' }),
-          });
-          if (res.ok) {
-            nlStatus.textContent = 'You\'re in. Welcome to the pile.';
-            nlStatus.style.color = '#4ade80';
-            nlEmail.value = '';
-          } else {
-            throw new Error(res.status);
-          }
-        } catch (err) {
-          nlStatus.textContent = 'Something went wrong. Try again.';
-          nlStatus.style.color = '#e8e846';
-          console.warn('Beehiiv subscribe error:', err);
-        }
-        nlBtn.disabled = false;
-        nlBtn.textContent = 'SUBSCRIBE';
-      } else {
-        // Fallback: open Beehiiv subscribe page
-        window.open(`https://burnpiles.beehiiv.com/subscribe?email=${encodeURIComponent(email)}`, '_blank');
-        nlStatus.textContent = 'Redirecting to subscribe...';
-        nlStatus.style.color = '#cdc4b1';
-      }
+      // Open Beehiiv subscribe with email pre-filled
+      window.open(`https://burnpiles.beehiiv.com/subscribe?email=${encodeURIComponent(email)}`, '_blank');
+      nlStatus.textContent = "Complete signup in the new tab — then you're in.";
+      nlStatus.style.color = '#4ade80';
+      nlEmail.value = '';
     });
   }
 
