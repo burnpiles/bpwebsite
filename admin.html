@@ -382,6 +382,31 @@
     .card-label.forge { color: #c4571a; }
     .card-label.fuel  { color: #9a3e12; }
 
+    /* ---- Toggle switch ---- */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.65rem 0; border-bottom: 1px solid var(--border);
+    }
+    .toggle-row:last-of-type { border-bottom: none; }
+    .toggle-row-label { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
+    .toggle-row-sub { font-size: 0.56rem; color: var(--text-dim); margin-top: 0.15rem; }
+    .toggle { position: relative; display: inline-block; width: 2.6rem; height: 1.4rem; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--border-mid); border-radius: 1rem;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-track::before {
+      content: ''; position: absolute;
+      width: 1.05rem; height: 1.05rem;
+      left: 3px; top: 50%; transform: translateY(-50%);
+      background: var(--text-dim); border-radius: 50%;
+      transition: left 0.18s, background 0.18s;
+    }
+    .toggle input:checked + .toggle-track { background: var(--accent); }
+    .toggle input:checked + .toggle-track::before { left: calc(100% - 1.1rem); background: #fff; }
+
     /* ---- Field hint inline ---- */
     .field-hint-inline {
       font-size: 0.55rem; color: var(--text-dim); letter-spacing: 0.04em;
@@ -450,6 +475,7 @@
       <button class="nav-item" data-page="portfolio">Portfolio</button>
       <button class="nav-item" data-page="story">Story</button>
       <button class="nav-item" data-page="intake">Intake</button>
+      <button class="nav-item" data-page="backgrounds">Backgrounds</button>
       <button class="nav-item" data-page="branding">Branding</button>
       <div class="nav-divider"></div>
       <div class="nav-section">Data</div>
@@ -556,19 +582,82 @@
         </div>
       </div>
 
+      <!-- ==================== BACKGROUNDS ==================== -->
+      <div class="page" id="page-backgrounds">
+        <h2 class="section-title">Backgrounds</h2>
+        <p class="section-desc">Control which background effects and images are active on each section of the site.</p>
+
+        <div class="card">
+          <span class="card-label">Splash Screen</span>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row-label">Ember animation</div>
+              <div class="toggle-row-sub">Fullscreen fire effect on first visit</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="bg-splash-enabled"><span class="toggle-track"></span></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="card-label">Hero</span>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row-label">Ember animation</div>
+              <div class="toggle-row-sub">Rising embers behind BURNPILES + service cards</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="bg-hero-ember"><span class="toggle-track"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row-label">Background image / GIF</div>
+              <div class="toggle-row-sub">Image shown behind the Flint / Forge / Fuel panels</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="bg-hero-bg-enabled"><span class="toggle-track"></span></label>
+          </div>
+          <div class="field" style="margin-top:0.9rem">
+            <label>Background URL</label>
+            <input type="url" id="s-hero-bg" placeholder="https://… (GIF or image behind Flint / Forge / Fuel panels)">
+            <div class="field-hint">Shown with a dark overlay. GIFs autoplay. Leave blank to use the default fire GIF.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="card-label">Featured Work</span>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row-label">Ember animation</div>
+              <div class="toggle-row-sub">Rising embers behind the project grid</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="bg-work-ember"><span class="toggle-track"></span></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="card-label">Newsletter</span>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row-label">Background image / GIF</div>
+              <div class="toggle-row-sub">Image shown behind the Stay in the Loop section</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="bg-newsletter-enabled"><span class="toggle-track"></span></label>
+          </div>
+          <div class="field" style="margin-top:0.9rem">
+            <label>Background URL</label>
+            <input type="url" id="s-newsletter-bg" placeholder="https://… (optional GIF or image)">
+            <div class="field-hint">Optional. GIFs autoplay. Leave blank for no background.</div>
+          </div>
+        </div>
+
+        <div class="save-bar">
+          <span class="save-bar-note">Changes apply on next page load.</span>
+          <button class="btn btn-primary" onclick="saveBackgrounds()">Save backgrounds</button>
+        </div>
+      </div>
+
       <!-- ==================== BRANDING ==================== -->
       <div class="page" id="page-branding">
         <h2 class="section-title">Branding</h2>
-        <p class="section-desc">Visual assets and image URLs used across the site.</p>
-
-        <div class="card">
-          <span class="card-label">Hero Panels</span>
-          <div class="field">
-            <label>Divisions Background Image / GIF URL</label>
-            <input type="url" id="s-hero-bg" placeholder="https://… (GIF or image behind Flint / Forge / Fuel panels)">
-            <div class="field-hint">Shown behind the service panels with a dark overlay. GIFs autoplay. Leave blank for the default fire GIF.</div>
-          </div>
-        </div>
+        <p class="section-desc">Media assets used across the site.</p>
 
         <div class="card">
           <span class="card-label">Sharing</span>
@@ -585,11 +674,6 @@
             <label>Ed Turner Photo URL</label>
             <input type="url" id="s-origin-img" placeholder="https://… (portrait photo for the origin story section)">
             <div class="field-hint">Shown in the right column of the "Why Burnpiles?" origin story section.</div>
-          </div>
-          <div class="field">
-            <label>Newsletter Section Background <span class="field-hint-inline">optional GIF or image URL</span></label>
-            <input type="url" id="s-newsletter-bg" placeholder="https://… (optional GIF or image behind the Stay in the Loop section)">
-            <div class="field-hint">Optional background behind the newsletter signup. GIFs autoplay. Leave blank for default.</div>
           </div>
         </div>
 
@@ -869,9 +953,14 @@
     metaDesc:      '',
     metaOgTitle:   '',
     metaOgDesc:    '',
-    newsletterBg:      '',
-    intakeResultBody:  '',
-    intakeCtaText:     '',
+    newsletterBg:       '',
+    intakeResultBody:   '',
+    intakeCtaText:      '',
+    splashEnabled:      true,
+    heroEmberEnabled:   true,
+    heroBgEnabled:      true,
+    workEmberEnabled:   true,
+    newsletterBgEnabled:true,
     social: {
       instagram: 'https://instagram.com/burnpiles',
       x:         'https://x.com/burnpiles',
@@ -994,8 +1083,13 @@
       metaOgTitle:   s.meta_og_title    || '',
       metaOgDesc:    s.meta_og_desc     || '',
       newsletterBg:     s.newsletter_bg      || '',
-      intakeResultBody: s.intake_result_body || '',
-      intakeCtaText:    s.intake_cta_text    || '',
+      intakeResultBody:    s.intake_result_body  || '',
+      intakeCtaText:       s.intake_cta_text     || '',
+      splashEnabled:       s.splash_enabled       !== '0',
+      heroEmberEnabled:    s.hero_ember_enabled   !== '0',
+      heroBgEnabled:       s.hero_bg_enabled      !== '0',
+      workEmberEnabled:    s.work_ember_enabled   !== '0',
+      newsletterBgEnabled: s.newsletter_bg_enabled !== '0',
       social: {
         instagram: s.social_instagram || DEFAULTS.social.instagram,
         x: s.social_x || DEFAULTS.social.x,
@@ -1039,8 +1133,13 @@
       { key: 'meta_og_title',   value: cfg.metaOgTitle     || '' },
       { key: 'meta_og_desc',    value: cfg.metaOgDesc      || '' },
       { key: 'newsletter_bg',      value: cfg.newsletterBg     || '' },
-      { key: 'intake_result_body', value: cfg.intakeResultBody || '' },
-      { key: 'intake_cta_text',    value: cfg.intakeCtaText    || '' },
+      { key: 'intake_result_body',    value: cfg.intakeResultBody    || '' },
+      { key: 'intake_cta_text',       value: cfg.intakeCtaText       || '' },
+      { key: 'splash_enabled',        value: cfg.splashEnabled        ? '1' : '0' },
+      { key: 'hero_ember_enabled',    value: cfg.heroEmberEnabled     ? '1' : '0' },
+      { key: 'hero_bg_enabled',       value: cfg.heroBgEnabled        ? '1' : '0' },
+      { key: 'work_ember_enabled',    value: cfg.workEmberEnabled     ? '1' : '0' },
+      { key: 'newsletter_bg_enabled', value: cfg.newsletterBgEnabled  ? '1' : '0' },
       { key: 'social_instagram', value: cfg.social?.instagram || '' },
       { key: 'social_x', value: cfg.social?.x || '' },
       { key: 'social_linkedin', value: cfg.social?.linkedin || '' },
@@ -1174,8 +1273,15 @@
     _g('story-heading').value         = cfg.originHeading    || '';
     _g('story-body').value            = cfg.originBody       || '';
     _g('s-newsletter-bg').value       = cfg.newsletterBg     || '';
-    _g('intake-result-body').value    = cfg.intakeResultBody || '';
-    _g('intake-cta-text').value       = cfg.intakeCtaText    || '';
+    _g('intake-result-body').value      = cfg.intakeResultBody  || '';
+    _g('intake-cta-text').value         = cfg.intakeCtaText     || '';
+    const _c = id => { const el = document.getElementById(id); if (el) el.checked = true; return el; };
+    const _setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val !== false; };
+    _setChk('bg-splash-enabled',    cfg.splashEnabled);
+    _setChk('bg-hero-ember',        cfg.heroEmberEnabled);
+    _setChk('bg-hero-bg-enabled',   cfg.heroBgEnabled);
+    _setChk('bg-work-ember',        cfg.workEmberEnabled);
+    _setChk('bg-newsletter-enabled',cfg.newsletterBgEnabled);
   }
 
   /* ============================================================ SETTINGS */
@@ -1190,12 +1296,22 @@
   }
 
   function saveBranding() {
-    cfg.heroBg       = document.getElementById('s-hero-bg').value.trim();
-    cfg.ogImage      = document.getElementById('s-og-image').value.trim();
-    cfg.originImage  = document.getElementById('s-origin-img').value.trim();
-    cfg.newsletterBg = document.getElementById('s-newsletter-bg').value.trim();
+    cfg.ogImage     = document.getElementById('s-og-image').value.trim();
+    cfg.originImage = document.getElementById('s-origin-img').value.trim();
     saveConfig();
     toast('Branding saved.', 'success');
+  }
+
+  function saveBackgrounds() {
+    cfg.splashEnabled       = document.getElementById('bg-splash-enabled').checked;
+    cfg.heroEmberEnabled    = document.getElementById('bg-hero-ember').checked;
+    cfg.heroBgEnabled       = document.getElementById('bg-hero-bg-enabled').checked;
+    cfg.heroBg              = document.getElementById('s-hero-bg').value.trim();
+    cfg.workEmberEnabled    = document.getElementById('bg-work-ember').checked;
+    cfg.newsletterBgEnabled = document.getElementById('bg-newsletter-enabled').checked;
+    cfg.newsletterBg        = document.getElementById('s-newsletter-bg').value.trim();
+    saveConfig();
+    toast('Background settings saved.', 'success');
   }
 
   /* ============================================================ SOCIAL */

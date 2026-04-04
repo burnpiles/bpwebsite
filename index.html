@@ -2368,6 +2368,9 @@
      ============================================================ */
   const API_KEY = () => (typeof window !== 'undefined' && window.ANTHROPIC_API_KEY) || '';
 
+  // Fast sync read of admin config for feature flags (ember on/off, bg on/off)
+  const _adminCfg = (() => { try { return JSON.parse(localStorage.getItem('bp_admin') || '{}'); } catch(e) { return {}; } })();
+
   /* ============================================================
      ADMIN OVERRIDES — load from localStorage (set by admin.html)
      ============================================================ */
@@ -2401,11 +2404,12 @@
       });
     }
 
-    // Hero divisions background — set CSS var; empty string = remove GIF
+    // Hero divisions background — set CSS var; respect heroBgEnabled toggle
     if (cfg.heroBg !== undefined) {
+      const bgOn = cfg.heroBgEnabled !== false;
       document.documentElement.style.setProperty(
         '--divisions-bg',
-        cfg.heroBg ? `url('${cfg.heroBg}') center/cover no-repeat` : 'none'
+        (bgOn && cfg.heroBg) ? `url('${cfg.heroBg}') center/cover no-repeat` : 'none'
       );
     }
 
@@ -2445,11 +2449,12 @@
       if (s.calendly_url) {
         document.querySelectorAll('a[href*="calendly.com"]').forEach(a => a.href = s.calendly_url);
       }
-      // Hero divisions background — update CSS var; empty = remove GIF
+      // Hero divisions background — update CSS var; respect enabled toggle
       if ('hero_bg' in s) {
+        const bgOn = s.hero_bg_enabled !== '0';
         document.documentElement.style.setProperty(
           '--divisions-bg',
-          s.hero_bg ? `url('${s.hero_bg}') center/cover no-repeat` : 'none'
+          (bgOn && s.hero_bg) ? `url('${s.hero_bg}') center/cover no-repeat` : 'none'
         );
       }
       // Origin image
@@ -2538,14 +2543,16 @@
         const el = document.getElementById('result-calendly');
         if (el) el.textContent = s.intake_cta_text;
       }
-      // Newsletter section background
+      // Newsletter section background — respect enabled toggle
       if ('newsletter_bg' in s) {
+        const nlOn = s.newsletter_bg_enabled !== '0';
         const nl = document.getElementById('newsletter');
         if (nl) {
-          nl.style.backgroundImage = s.newsletter_bg ? `url('${s.newsletter_bg}')` : '';
-          nl.style.backgroundSize  = s.newsletter_bg ? 'cover' : '';
-          nl.style.backgroundPosition = s.newsletter_bg ? 'center' : '';
-          nl.style.backgroundRepeat   = s.newsletter_bg ? 'no-repeat' : '';
+          const url = nlOn && s.newsletter_bg ? s.newsletter_bg : '';
+          nl.style.backgroundImage    = url ? `url('${url}')` : '';
+          nl.style.backgroundSize     = url ? 'cover' : '';
+          nl.style.backgroundPosition = url ? 'center' : '';
+          nl.style.backgroundRepeat   = url ? 'no-repeat' : '';
         }
       }
     }).catch(e => console.warn('Supabase settings error:', e));
@@ -2715,7 +2722,7 @@
   }
 
   // ---- Work section ember canvas ----
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && _adminCfg.workEmberEnabled !== false) {
     const workCanvas = document.getElementById('work-canvas');
     const workEl     = document.getElementById('work');
     const _wMobile   = window.innerWidth < 768;
@@ -2757,7 +2764,7 @@
 
   // ---- Full-hero ember canvas — start immediately so it's running when splash fades ----
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!prefersReducedMotion) {
+  if (!prefersReducedMotion && _adminCfg.heroEmberEnabled !== false) {
     const heroCanvas = document.getElementById('hero-canvas');
     const heroEl     = document.getElementById('hero');
     const _isMobile  = window.innerWidth < 768;
@@ -3804,7 +3811,7 @@
     const splash = document.getElementById('splash');
     const splashCanvas = document.getElementById('splash-canvas');
     if (!splash || !splashCanvas) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || _adminCfg.splashEnabled === false) {
       splash.style.display = 'none';
       return;
     }
