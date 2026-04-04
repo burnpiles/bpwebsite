@@ -491,9 +491,47 @@
     projects: null, // null = use index.html defaults
   };
 
+  /* ============================================================ SUPABASE */
+  const SUPA_URL = 'https://ylpfupjilqfxfattwikx.supabase.co';
+  const SUPA_ANON = 'sb_publishable_fUZQYiwQYWI_e63PYOfgzQ_jQ2qyByi';
+  // Admin operations go through /api/db serverless function (secret key is server-side)
+  const SUPA_HEADERS = { 'Content-Type': 'application/json' };
+  const ADMIN_API = '/api/db';
+
+  // Read uses public anon key directly
+  async function supaGet(table, query) {
+    const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${query || 'select=*'}`, {
+      headers: { 'apikey': SUPA_ANON, 'Authorization': `Bearer ${SUPA_ANON}` }
+    });
+    return res.ok ? await res.json() : [];
+  }
+  // Writes go through serverless API (secret key server-side)
+  async function supaUpsert(table, data) {
+    const res = await fetch(ADMIN_API, {
+      method: 'POST', headers: SUPA_HEADERS,
+      body: JSON.stringify({ action: 'upsert', table, data })
+    });
+    return res.ok;
+  }
+  async function supaDelete(table, query) {
+    const res = await fetch(ADMIN_API, {
+      method: 'POST', headers: SUPA_HEADERS,
+      body: JSON.stringify({ action: 'delete', table, query })
+    });
+    return res.ok;
+  }
+  async function supaUpdate(table, query, data) {
+    const res = await fetch(ADMIN_API, {
+      method: 'POST', headers: SUPA_HEADERS,
+      body: JSON.stringify({ action: 'update', table, query, data })
+    });
+    return res.ok;
+  }
+
   /* ============================================================ STATE */
   let cfg = {};
-  let editingIdx = null; // index of project being edited
+  let supaProjects = [];
+  let editingIdx = null;
 
   /* ============================================================ AUTH */
   function checkAuth() {
@@ -513,10 +551,10 @@
     }
   });
 
-  function showApp() {
+  async function showApp() {
     document.getElementById('gate').style.display = 'none';
     document.getElementById('app').style.display  = 'block';
-    loadConfig();
+    await loadConfig();
     populateForms();
     renderProjectList();
   }
@@ -527,19 +565,47 @@
   }
 
   /* ============================================================ CONFIG I/O */
-  function loadConfig() {
-    try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      cfg = Object.assign({}, DEFAULTS, stored || {});
-      if (!cfg.social) cfg.social = Object.assign({}, DEFAULTS.social);
-    } catch(e) {
-      cfg = Object.assign({}, DEFAULTS);
-    }
+  async function loadConfig() {
+    // Load settings from Supabase
+    const rows = await supaGet('settings', 'select=*');
+    const s = {};
+    rows.forEach(r => s[r.key] = r.value);
+    cfg = {
+      email: s.email || DEFAULTS.email,
+      calendlyUrl: s.calendly_url || DEFAULTS.calendlyUrl,
+      apiKey: s.anthropic_api_key || '',
+      beehiivApiKey: s.beehiiv_api_key || '',
+      beehiivPubId: s.beehiiv_pub_id || DEFAULTS.beehiivPubId,
+      heroBg: s.hero_bg || '',
+      ogImage: s.og_image || '',
+      originImage: s.origin_image || '',
+      social: {
+        instagram: s.social_instagram || DEFAULTS.social.instagram,
+        x: s.social_x || DEFAULTS.social.x,
+        linkedin: s.social_linkedin || DEFAULTS.social.linkedin,
+      },
+    };
+    // Load projects from Supabase
+    supaProjects = await supaGet('projects', 'select=*&order=sort_order');
   }
 
-  function saveConfig() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
-    // Also persist API key to window for same-session use
+  async function saveConfig() {
+    // Save settings to Supabase
+    const pairs = [
+      { key: 'email', value: cfg.email },
+      { key: 'calendly_url', value: cfg.calendlyUrl },
+      { key: 'anthropic_api_key', value: cfg.apiKey || '' },
+      { key: 'beehiiv_api_key', value: cfg.beehiivApiKey || '' },
+      { key: 'beehiiv_pub_id', value: cfg.beehiivPubId || '' },
+      { key: 'hero_bg', value: cfg.heroBg || '' },
+      { key: 'og_image', value: cfg.ogImage || '' },
+      { key: 'origin_image', value: cfg.originImage || '' },
+      { key: 'social_instagram', value: cfg.social?.instagram || '' },
+      { key: 'social_x', value: cfg.social?.x || '' },
+      { key: 'social_linkedin', value: cfg.social?.linkedin || '' },
+    ];
+    await supaUpsert('settings', pairs);
+    // Also persist API key to window
     if (cfg.apiKey) window.ANTHROPIC_API_KEY = cfg.apiKey;
     updateSaveStatus(true);
   }
@@ -602,11 +668,7 @@
 
   /* ============================================================ PORTFOLIO */
   function getProjects() {
-    // If no admin overrides yet, use embedded defaults
-    if (!cfg.projects) {
-      cfg.projects = getDefaultProjects();
-    }
-    return cfg.projects;
+    return supaProjects;
   }
 
   function getDefaultProjects() {
@@ -709,7 +771,7 @@
       </div>
       <div class="field">
         <label>Description <span style="color:var(--text-dim);font-size:0.6rem">(max 300)</span></label>
-        <textarea id="pf-${i}-desc" maxlength="300">${esc(p.desc)}</textarea>
+        <textarea id="pf-${i}-desc" maxlength="300">${esc(p.description || p.desc || '')}</textarea>
       </div>
       <div class="field-row">
         <div class="field">
@@ -719,7 +781,7 @@
         </div>
         <div class="field">
           <label>Card BG Color</label>
-          <input type="color" id="pf-${i}-thumbbg" value="${p.thumbBg || '#181310'}" style="height:2.5rem;padding:0.2rem 0.4rem;cursor:pointer">
+          <input type="color" id="pf-${i}-thumbbg" value="${p.thumb_bg || p.thumbBg || '#181310'}" style="height:2.5rem;padding:0.2rem 0.4rem;cursor:pointer">
         </div>
       </div>
       <div class="field-row">
@@ -772,17 +834,17 @@
     }
   }
 
-  function saveProjectEdit(i) {
-    const projects = getProjects();
-    const p = projects[i];
-    p.title    = document.getElementById(`pf-${i}-title`).value.trim();
-    p.client   = document.getElementById(`pf-${i}-client`).value.trim();
-    p.year     = document.getElementById(`pf-${i}-year`).value.trim();
-    p.type     = document.getElementById(`pf-${i}-type`).value.trim();
-    p.desc     = document.getElementById(`pf-${i}-desc`).value.trim();
-    p.thumb    = document.getElementById(`pf-${i}-thumb`).value.trim();
-    p.thumbBg  = document.getElementById(`pf-${i}-thumbbg`).value;
-    p.link     = document.getElementById(`pf-${i}-link`).value.trim();
+  async function saveProjectEdit(i) {
+    const p = supaProjects[i];
+    p.title       = document.getElementById(`pf-${i}-title`).value.trim();
+    p.client      = document.getElementById(`pf-${i}-client`).value.trim();
+    p.year        = document.getElementById(`pf-${i}-year`).value.trim();
+    p.type        = document.getElementById(`pf-${i}-type`).value.trim();
+    p.description = document.getElementById(`pf-${i}-desc`).value.trim();
+    p.thumb       = document.getElementById(`pf-${i}-thumb`).value.trim();
+    p.thumb_bg    = document.getElementById(`pf-${i}-thumbbg`).value;
+    p.link        = document.getElementById(`pf-${i}-link`).value.trim();
+
     // Collect gallery items
     const galContainer = document.getElementById(`pf-${i}-gallery`);
     const galRows = galContainer ? galContainer.querySelectorAll('.gallery-row') : [];
@@ -810,12 +872,13 @@
       const url   = document.getElementById(`pf-${i}-linkurl-${li}`)?.value?.trim() || '';
       if (url) links.push({ label: label || 'View →', url });
     });
-    p.links = links.length > 0 ? links : undefined;
+    p.links = links.length > 0 ? links : [];
 
+    // Save to Supabase immediately
+    await supaUpdate('projects', `id=eq.${p.id}`, p);
     editingIdx = null;
-    updateSaveStatus(false);
     renderProjectList();
-    toast('Project updated. Remember to save.', 'success');
+    toast('Project saved to database.', 'success');
   }
 
   // Gallery helpers
@@ -838,13 +901,12 @@
   }
 
   // Publish/unpublish toggle
-  function togglePublish(i) {
-    const projects = getProjects();
-    const p = projects[i];
+  async function togglePublish(i) {
+    const p = supaProjects[i];
     p.status = (p.status === 'draft') ? 'published' : 'draft';
-    updateSaveStatus(false);
+    await supaUpdate('projects', `id=eq.${p.id}`, { status: p.status });
     renderProjectList();
-    toast(p.status === 'draft' ? 'Unpublished — save to apply.' : 'Published — save to apply.', 'success');
+    toast(p.status === 'draft' ? 'Unpublished.' : 'Published.', 'success');
   }
 
   // Link helpers
@@ -865,29 +927,32 @@
     renderProjectList();
   }
 
-  function addProject() {
-    const projects = getProjects();
+  async function addProject() {
     const newId = 'p' + Date.now();
-    projects.push({
+    const newProj = {
       id: newId, title: 'New Project', client: 'Client Name', year: '2026',
-      type: 'Type', tags: [], thumbBg: '#181310', status: 'draft',
-      desc: '', thumb: '', media: { kind: 'image', src: '', gallery: [] }, link: '',
-    });
-    editingIdx = projects.length - 1;
-    updateSaveStatus(false);
+      type: 'Type', tags: [], thumb_bg: '#181310', status: 'draft',
+      description: '', thumb: '', media: { kind: 'image', src: '' }, links: [], link: '',
+      sort_order: supaProjects.length + 1,
+    };
+    await supaUpsert('projects', [newProj]);
+    supaProjects.push(newProj);
+    editingIdx = supaProjects.length - 1;
     renderProjectList();
     setTimeout(() => {
-      document.getElementById(`edit-form-${projects.length - 1}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      document.getElementById(`edit-form-${supaProjects.length - 1}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
+    toast('Project created.', 'success');
   }
 
-  function deleteProject(i) {
+  async function deleteProject(i) {
     if (!confirm('Delete this project? This cannot be undone.')) return;
-    const projects = getProjects();
-    projects.splice(i, 1);
+    const p = supaProjects[i];
+    await supaDelete('projects', `id=eq.${p.id}`);
+    supaProjects.splice(i, 1);
     if (editingIdx === i) editingIdx = null;
-    updateSaveStatus(false);
     renderProjectList();
+    toast('Project deleted.', 'success');
   }
 
   function moveProject(i, dir) {
@@ -899,9 +964,13 @@
     renderProjectList();
   }
 
-  function savePortfolio() {
-    saveConfig();
-    toast('Portfolio saved.', 'success');
+  async function savePortfolio() {
+    // Update sort_order for all projects
+    for (let i = 0; i < supaProjects.length; i++) {
+      supaProjects[i].sort_order = i + 1;
+    }
+    await supaUpsert('projects', supaProjects);
+    toast('Portfolio saved to database.', 'success');
   }
 
   /* ============================================================ EXPORT / IMPORT */

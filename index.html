@@ -2346,10 +2346,42 @@
       }
     }
 
-    // Projects — replace PROJECTS array before renderPortfolio runs
+    // Projects — localStorage override (legacy, Supabase is primary now)
     if (Array.isArray(cfg.projects) && cfg.projects.length) {
       window._adminProjects = cfg.projects;
     }
+
+    // Fetch settings from Supabase and apply
+    fetch('https://ylpfupjilqfxfattwikx.supabase.co/rest/v1/settings?select=*', {
+      headers: { 'apikey': 'sb_publishable_fUZQYiwQYWI_e63PYOfgzQ_jQ2qyByi', 'Authorization': 'Bearer sb_publishable_fUZQYiwQYWI_e63PYOfgzQ_jQ2qyByi' }
+    }).then(r => r.json()).then(rows => {
+      const s = {};
+      rows.forEach(r => s[r.key] = r.value);
+      // Calendly
+      if (s.calendly_url) {
+        document.querySelectorAll('a[href*="calendly.com"]').forEach(a => a.href = s.calendly_url);
+      }
+      // Origin image
+      if (s.origin_image) {
+        const om = document.querySelector('.origin-media');
+        if (om) om.innerHTML = `<img src="${s.origin_image}" alt="Origin Story" style="width:100%;height:100%;object-fit:cover;display:block">`;
+      }
+      // Social links
+      const socials = document.querySelectorAll('.footer-social a');
+      socials.forEach(a => {
+        const label = a.getAttribute('aria-label') || '';
+        if (label.includes('Instagram') && s.social_instagram) a.href = s.social_instagram;
+        if (label.includes('LinkedIn') && s.social_linkedin) a.href = s.social_linkedin;
+        if (label.includes(' X') && s.social_x) a.href = s.social_x;
+      });
+      // OG image
+      if (s.og_image) {
+        const ogMeta = document.querySelector('meta[property="og:image"]');
+        const twMeta = document.querySelector('meta[name="twitter:image"]');
+        if (ogMeta) ogMeta.content = s.og_image;
+        if (twMeta) twMeta.content = s.og_image;
+      }
+    }).catch(e => console.warn('Settings fetch error:', e));
 
     // Beehiiv — fetch latest posts
     if (cfg.beehiivApiKey && cfg.beehiivPubId) {
@@ -2818,12 +2850,40 @@
     },
   ];
 
+  // ---- Supabase config ----
+  const SUPABASE_URL = 'https://ylpfupjilqfxfattwikx.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_fUZQYiwQYWI_e63PYOfgzQ_jQ2qyByi';
+
+  async function supaFetch(table, query) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      });
+      if (res.ok) return await res.json();
+    } catch(e) { console.warn('Supabase fetch error:', e); }
+    return null;
+  }
+
   // ---- Render portfolio grid ----
-  (function renderPortfolio() {
+  (async function renderPortfolio() {
     const grid = document.getElementById('work-grid');
     if (!grid) return;
-    const allProjects = window._adminProjects || PROJECTS;
-    const activeProjects = allProjects.filter(p => p.status !== 'draft');
+
+    // Try Supabase first, fallback to hardcoded PROJECTS
+    let activeProjects;
+    const supaProjects = await supaFetch('projects', 'select=*&status=eq.published&order=sort_order');
+    if (supaProjects && supaProjects.length) {
+      activeProjects = supaProjects.map(p => ({
+        ...p,
+        desc: p.description,
+        thumbBg: p.thumb_bg,
+        media: typeof p.media === 'string' ? JSON.parse(p.media) : p.media,
+        links: typeof p.links === 'string' ? JSON.parse(p.links) : (p.links || []),
+      }));
+    } else {
+      const allProjects = window._adminProjects || PROJECTS;
+      activeProjects = allProjects.filter(p => p.status !== 'draft');
+    }
     activeProjects.forEach((p, i) => {
       const card = document.createElement('article');
       card.className = 'work-card';
