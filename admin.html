@@ -631,14 +631,23 @@
       const item = document.createElement('div');
       item.className = 'proj-item';
       item.dataset.idx = i;
+      const isDraft = p.status === 'draft';
+      const statusBadge = isDraft
+        ? '<span style="font-size:0.58rem;padding:0.15rem 0.4rem;border:1px solid rgba(238,232,220,0.2);color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-left:0.5rem">Draft</span>'
+        : '<span style="font-size:0.58rem;padding:0.15rem 0.4rem;border:1px solid rgba(74,222,128,0.3);color:#4ade80;letter-spacing:0.1em;text-transform:uppercase;margin-left:0.5rem">Live</span>';
+      const pubBtn = isDraft
+        ? `<button class="btn btn-primary btn-sm" onclick="togglePublish(${i})">Publish</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="togglePublish(${i})">Unpublish</button>`;
+
       item.innerHTML = `
         <div class="proj-item-info">
-          <div class="proj-item-title">${esc(p.title)}</div>
+          <div class="proj-item-title">${esc(p.title)} ${statusBadge}</div>
           <div class="proj-item-meta">${esc(p.client)} · ${esc(p.year)} · ${esc(p.type)}</div>
         </div>
         <div class="proj-item-actions">
           <button class="btn btn-ghost btn-sm" onclick="moveProject(${i}, -1)" title="Move up" ${i===0?'disabled':''}>↑</button>
           <button class="btn btn-ghost btn-sm" onclick="moveProject(${i}, 1)"  title="Move down" ${i===projects.length-1?'disabled':''}>↓</button>
+          ${pubBtn}
           <button class="btn btn-ghost btn-sm" onclick="toggleEditProject(${i})">Edit</button>
           <button class="btn btn-danger btn-sm" onclick="deleteProject(${i})">Delete</button>
         </div>`;
@@ -812,6 +821,16 @@
     renderProjectList();
   }
 
+  // Publish/unpublish toggle
+  function togglePublish(i) {
+    const projects = getProjects();
+    const p = projects[i];
+    p.status = (p.status === 'draft') ? 'published' : 'draft';
+    updateSaveStatus(false);
+    renderProjectList();
+    toast(p.status === 'draft' ? 'Unpublished — save to apply.' : 'Published — save to apply.', 'success');
+  }
+
   // Link helpers
   function addLink(projIdx) {
     const projects = getProjects();
@@ -835,7 +854,7 @@
     const newId = 'p' + Date.now();
     projects.push({
       id: newId, title: 'New Project', client: 'Client Name', year: '2026',
-      type: 'Type', tags: [], thumbBg: '#181310',
+      type: 'Type', tags: [], thumbBg: '#181310', status: 'draft',
       desc: '', thumb: '', media: { kind: 'image', src: '', gallery: [] }, link: '',
     });
     editingIdx = projects.length - 1;

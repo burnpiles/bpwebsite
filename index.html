@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Burnpiles is a creative technology studio and AI/XR consultancy. We know what to burn.">
-  <meta property="og:title" content="Burnpiles — Burn the noise. Keep the signal.">
-  <meta property="og:description" content="Creative technology studio. AI & XR consultancy. We know what to burn.">
+  <meta name="description" content="Burn the noise. Keep the signal. Burnpiles is a creative technology studio.">
+  <meta property="og:title" content="Burnpiles">
+  <meta property="og:description" content="Burn the noise. Keep the signal.">
   <meta property="og:image" content="https://burnpiles.com/og-image.svg">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
@@ -513,21 +513,23 @@
       .hero-model-btn { display: block; margin-top: 1rem; margin-bottom: 1rem; }
       /* Flywheel fits one screen on mobile */
       #flywheel {
-        padding-top: 1.5rem;
-        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+        padding-top: 0.8rem;
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0));
         min-height: 100dvh; min-height: 100svh;
-        display: flex; flex-direction: column; justify-content: center;
+        display: flex; flex-direction: column;
         box-sizing: border-box;
       }
       #flywheel .wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-      .flywheel-head { margin-bottom: 1.5rem; }
-      .flywheel-head h2 { font-size: clamp(1.2rem, 5vw, 1.6rem); margin-top: 0.4rem; }
-      .fw-diagram { margin-bottom: 1.5rem; }
-      .path-selector { padding-top: 1rem; }
-      .path-q { margin-bottom: 0.8rem; }
-      .path-options { gap: 0.4rem; }
-      .path-btn { padding: 0.6rem 0.8rem; font-size: 0.6rem; }
-      .flywheel-work-btn { padding-top: 0.8rem; }
+      .flywheel-head { margin-bottom: 1rem; }
+      .flywheel-head h2 { font-size: clamp(1.1rem, 4.5vw, 1.4rem); margin-top: 0.3rem; }
+      .fw-diagram { margin-bottom: 1rem; gap: 0; }
+      .fw-arrow-down { height: 2rem; }
+      .fw-connector { padding-top: 1rem; }
+      .path-selector { padding-top: 0.8rem; border-top: none; }
+      .path-q { margin-bottom: 0.5rem; font-size: clamp(0.9rem, 3.5vw, 1.1rem); }
+      .path-options { gap: 0.35rem; grid-template-columns: 1fr 1fr; }
+      .path-btn { padding: 0.5rem 0.6rem; font-size: 0.55rem; }
+      .flywheel-work-btn { margin-top: 0.6rem !important; padding: 0.6rem 1.5rem; }
 
       /* Portfolio on mobile — single column, compact */
       .work-grid { grid-template-columns: 1fr !important; gap: 2px !important; }
@@ -1704,8 +1706,9 @@
     }
     .footer-left {
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 0.25rem;
+      flex-wrap: wrap;
     }
     .footer-domain {
       font-family: var(--font-display);
@@ -2655,7 +2658,8 @@
   (function renderPortfolio() {
     const grid = document.getElementById('work-grid');
     if (!grid) return;
-    const activeProjects = window._adminProjects || PROJECTS;
+    const allProjects = window._adminProjects || PROJECTS;
+    const activeProjects = allProjects.filter(p => p.status !== 'draft');
     activeProjects.forEach((p, i) => {
       const card = document.createElement('article');
       card.className = 'work-card';
