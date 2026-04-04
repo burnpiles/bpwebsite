@@ -167,13 +167,18 @@
     /* Hero background image (set via admin or JS) */
     .hero-bg {
       position: absolute; inset: 0; z-index: 0;
-      background-size: cover;
-      background-position: center;
+      overflow: hidden;
+    }
+    .hero-bg img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
     }
     .hero-bg::after {
       content: '';
       position: absolute; inset: 0;
-      background: rgba(12, 11, 9, 0.75);
+      background: rgba(12, 11, 9, 0.7);
+      z-index: 1;
     }
 
     .hero-top {
@@ -249,9 +254,9 @@
       display: inline-block;
       margin-top: clamp(1.5rem, 3.5vh, 2.8rem);
       padding: 0.9rem 2.4rem;
-      background: transparent;
+      background: rgba(12, 11, 9, 0.9);
       border: 1px solid var(--border-accent);
-      color: var(--text);
+      color: var(--accent-bright);
       font-family: var(--font-mono);
       font-size: 0.7rem;
       letter-spacing: 0.18em;
@@ -319,6 +324,13 @@
       margin-bottom: clamp(1rem, 2vh, 1.5rem);
       position: relative;
       z-index: 2;
+      background: rgba(12, 11, 9, 0.9) !important;
+      color: var(--accent-bright) !important;
+      border-color: var(--accent) !important;
+    }
+    .hero-model-btn:hover {
+      background: var(--accent) !important;
+      color: var(--bg) !important;
     }
     .work-build-btn {
       display: block;
@@ -363,7 +375,7 @@
       overflow: hidden;
       padding: clamp(1.6rem, 3vw, 2.5rem) clamp(1.8rem, 3.5vw, 3rem) clamp(2rem, 4vh, 3rem);
       border-right: 1px solid var(--border);
-      background: rgba(15, 13, 10, 0.6);
+      background: rgba(12, 11, 9, 0.92);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       box-shadow:
@@ -385,7 +397,7 @@
     .hdiv:nth-child(3).visible { transition-delay: 0.3s; }
     .hdiv:last-child { border-right: none; }
     .hdiv:hover {
-      background: rgba(20, 17, 12, 0.75);
+      background: rgba(12, 11, 9, 0.95);
       box-shadow:
         inset 0 1px 0 rgba(238, 232, 220, 0.1),
         inset 0 0 50px rgba(196, 87, 26, 0.06),
@@ -2244,7 +2256,13 @@
     // Hero background image
     if (cfg.heroBg) {
       const heroBg = document.getElementById('hero-bg');
-      if (heroBg) heroBg.style.backgroundImage = `url(${cfg.heroBg})`;
+      if (heroBg) {
+        const img = document.createElement('img');
+        img.src = cfg.heroBg;
+        img.alt = '';
+        img.loading = 'eager';
+        heroBg.appendChild(img);
+      }
     }
 
     // Social share image
@@ -3406,21 +3424,22 @@
     }
     document.body.classList.add('splash-active');
 
-    // Set canvas to fill splash container — defer to get actual size
-    splashCanvas.style.width = '100%';
-    splashCanvas.style.height = '100%';
-    // Use rAF to ensure layout has happened before reading dimensions
+    // Set canvas to fill splash container
+    splashCanvas.style.width = '100vw';
+    splashCanvas.style.height = '100vh';
+    // Defer to get actual size after layout
     requestAnimationFrame(() => {
-    const W = splashCanvas.offsetWidth || window.innerWidth || screen.width || 1024;
-    const H = splashCanvas.offsetHeight || window.innerHeight || screen.height || 768;
+    const W = Math.max(splashCanvas.clientWidth, window.innerWidth, screen.width) || 1024;
+    const H = Math.max(splashCanvas.clientHeight, window.innerHeight, screen.height) || 768;
     splashCanvas.width = W;
     splashCanvas.height = H;
     const ctx = splashCanvas.getContext('2d');
 
     // Create a dedicated splash ember system — fewer on mobile for performance
     const isMobile = W < 768;
+    const isTablet = W >= 768 && W < 1200;
     const splashCfg = {
-      count: isMobile ? 150 : 500, speedMult: 1.6,
+      count: isMobile ? 120 : isTablet ? 250 : 500, speedMult: 1.6,
       glowColor: 'rgba(240, 100, 20, 0.9)',
       glowMid: 'rgba(220, 75, 15, 0.45)',
       coreColor: 'rgba(255, 220, 110, 1)',
