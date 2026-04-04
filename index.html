@@ -529,17 +529,13 @@
       .path-btn { padding: 0.6rem 0.8rem; font-size: 0.6rem; }
       .flywheel-work-btn { padding-top: 0.8rem; }
 
-      /* Compact portfolio on mobile — 2x3 grid */
-      .work-grid { grid-template-columns: 1fr 1fr !important; gap: 1px !important; }
-      .card-thumb { display: none; }
-      .card-body {
-        padding: 0.7rem 0.6rem;
-        gap: 0.15rem;
-      }
-      .card-type { font-size: 0.42rem; letter-spacing: 0.15em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .card-title { font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .card-client { font-size: 0.55rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .card-year { font-size: 0.5rem; padding-top: 0.3rem; }
+      /* Portfolio on mobile — single column, compact */
+      .work-grid { grid-template-columns: 1fr !important; gap: 2px !important; }
+      .card-body { padding: 0.8rem 1rem; }
+      .card-type { font-size: 0.5rem; }
+      .card-title { font-size: 0.9rem; }
+      .card-client { font-size: 0.65rem; }
+      .card-year { font-size: 0.55rem; padding-top: 0.3rem; }
 
       /* Flywheel — tight side-by-side on mobile */
       #flywheel .wrap { padding-left: 1.2rem; padding-right: 1.2rem; }
@@ -639,11 +635,11 @@
     .work-card[data-bg] .card-body::before {
       content: '';
       position: absolute; inset: 0;
-      background: linear-gradient(180deg, rgba(12, 11, 9, 0.75) 0%, rgba(12, 11, 9, 0.9) 100%);
+      background: rgba(12, 11, 9, 0.85);
       z-index: -1;
     }
     .work-card[data-bg]:hover .card-body::before {
-      background: linear-gradient(180deg, rgba(12, 11, 9, 0.6) 0%, rgba(12, 11, 9, 0.8) 100%);
+      background: rgba(12, 11, 9, 0.75);
     }
     .card-type {
       font-family: var(--font-mono);
@@ -764,8 +760,11 @@
       font-size: clamp(0.78rem, 1.2vw, 0.86rem);
       line-height: 1.82; color: var(--text); flex: 1;
     }
+    .modal-links {
+      display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.4rem;
+    }
     .modal-ext-link {
-      display: inline-block; margin-top: 1.4rem;
+      display: inline-block;
       font-family: var(--font-mono); font-size: 0.68rem;
       letter-spacing: 0.15em; text-transform: uppercase;
       color: var(--accent); text-decoration: none;
@@ -1954,7 +1953,7 @@
         </div>
         <div class="modal-tags" id="modal-tags"></div>
         <p class="modal-desc" id="modal-desc"></p>
-        <a class="modal-ext-link" id="modal-ext-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none">View project →</a>
+        <div class="modal-links" id="modal-links"></div>
       </div>
     </div>
   </div>
@@ -2579,6 +2578,10 @@
       desc: 'A three-part internal AI literacy experience for 12,000 employees across 40 countries. Replaced a planned town hall with interactive workshops, honest documentation, and a clear vocabulary — not a verdict. Internal AI tool adoption improved measurably in the following quarter.',
       thumb: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&h=400&fit=crop',
       media: { kind: 'image', src: '' },
+      links: [
+        { label: 'Case Study →', url: '#' },
+        { label: 'Watch Video →', url: '#' },
+      ],
       link: '',
     },
     {
@@ -2692,7 +2695,7 @@
   const mYear    = document.getElementById('modal-year');
   const mTags    = document.getElementById('modal-tags');
   const mDesc    = document.getElementById('modal-desc');
-  const mExtLink = document.getElementById('modal-ext-link');
+  const mLinks   = document.getElementById('modal-links');
   let   lastFocus = null;
 
   function openWorkModal(p) {
@@ -2772,12 +2775,11 @@
     mDesc.textContent    = p.desc;
     mTags.innerHTML = p.tags.map(t => `<span class="modal-tag">${esc(t)}</span>`).join('');
 
-    if (p.link) {
-      mExtLink.href         = p.link;
-      mExtLink.style.display = 'inline-block';
-    } else {
-      mExtLink.style.display = 'none';
-    }
+    // Render links (supports array of {label, url} or single string)
+    const links = p.links || (p.link ? [{ label: 'View project →', url: p.link }] : []);
+    mLinks.innerHTML = links.filter(l => l.url).map(l =>
+      `<a class="modal-ext-link" href="${l.url}" target="_blank" rel="noopener noreferrer">${esc(l.label || 'View →')}</a>`
+    ).join('');
 
     wModal.classList.add('open');
     wModal.removeAttribute('aria-hidden');

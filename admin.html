@@ -723,8 +723,15 @@
         <div class="field-hint">e.g. Enterprise, AI, Flint</div>
       </div>
       <div class="field">
-        <label>External Link (optional)</label>
-        <input type="url" id="pf-${i}-link" value="${esc(p.link || '')}" placeholder="https://…">
+        <label>Links / Buttons <span style="color:var(--text-dim);font-size:0.6rem">(shown in modal)</span></label>
+        <div id="pf-${i}-links">${(p.links||[]).map((lnk, li) => `
+          <div class="field-row link-row" id="pf-${i}-link-${li}">
+            <div class="field" style="flex:1"><input type="text" id="pf-${i}-linklabel-${li}" value="${esc(lnk.label||'')}" placeholder="Button label (e.g. Case Study →)"></div>
+            <div class="field" style="flex:1.5"><input type="url" id="pf-${i}-linkurl-${li}" value="${esc(lnk.url||'')}" placeholder="https://…"></div>
+            <button class="btn btn-ghost btn-sm" onclick="removeLink(${i},${li})" style="align-self:flex-end;padding:0.4rem 0.6rem;color:var(--accent)">✕</button>
+          </div>`).join('')}</div>
+        <button class="btn btn-ghost btn-sm" onclick="addLink(${i})" style="margin-top:0.4rem">+ Add link</button>
+        <div class="field-hint">e.g. "Watch Video →" + YouTube URL, "Case Study →" + PDF link</div>
       </div>
       <div class="proj-edit-actions">
         <button class="btn btn-primary btn-sm" onclick="saveProjectEdit(${i})">Save changes</button>
@@ -769,6 +776,17 @@
     const tagStr = document.getElementById(`pf-${i}-tags`).value;
     p.tags = tagStr.split(',').map(t => t.trim()).filter(Boolean);
 
+    // Collect links
+    const linksContainer = document.getElementById(`pf-${i}-links`);
+    const linkRows = linksContainer ? linksContainer.querySelectorAll('.link-row') : [];
+    const links = [];
+    linkRows.forEach((row, li) => {
+      const label = document.getElementById(`pf-${i}-linklabel-${li}`)?.value?.trim() || '';
+      const url   = document.getElementById(`pf-${i}-linkurl-${li}`)?.value?.trim() || '';
+      if (url) links.push({ label: label || 'View →', url });
+    });
+    p.links = links.length > 0 ? links : undefined;
+
     editingIdx = null;
     updateSaveStatus(false);
     renderProjectList();
@@ -790,6 +808,24 @@
     const projects = getProjects();
     const p = projects[projIdx];
     if (p.media.gallery) p.media.gallery.splice(galIdx, 1);
+    editingIdx = projIdx;
+    renderProjectList();
+  }
+
+  // Link helpers
+  function addLink(projIdx) {
+    const projects = getProjects();
+    const p = projects[projIdx];
+    if (!p.links) p.links = [];
+    p.links.push({ label: '', url: '' });
+    editingIdx = projIdx;
+    renderProjectList();
+  }
+
+  function removeLink(projIdx, linkIdx) {
+    const projects = getProjects();
+    const p = projects[projIdx];
+    if (p.links) p.links.splice(linkIdx, 1);
     editingIdx = projIdx;
     renderProjectList();
   }
