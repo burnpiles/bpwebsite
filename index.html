@@ -2456,8 +2456,17 @@
       }
       // Ember kill switches — override module-level flags from Supabase
       // (catches incognito / no localStorage where _adminCfg defaults to all-on)
-      if (s.hero_ember_enabled === '0') _heroEmberAllowed = false;
-      if (s.work_ember_enabled === '0') _workEmberAllowed = false;
+      // Also clear the canvas so the last frame doesn't freeze on screen
+      if (s.hero_ember_enabled === '0') {
+        _heroEmberAllowed = false;
+        const hc = document.getElementById('hero-canvas');
+        if (hc) hc.getContext('2d').clearRect(0, 0, hc.width, hc.height);
+      }
+      if (s.work_ember_enabled === '0') {
+        _workEmberAllowed = false;
+        const wc = document.getElementById('work-canvas');
+        if (wc) wc.getContext('2d').clearRect(0, 0, wc.width, wc.height);
+      }
 
       // Hero divisions background — update CSS var; respect enabled toggle
       if ('hero_bg' in s) {
