@@ -235,12 +235,12 @@
     }
 
     /* Hero background image — GIF only behind the divisions panels */
-    /* Controlled via --divisions-bg CSS var set by JS from admin; defaults to bundled GIF */
+    /* Controlled via --divisions-bg CSS var set by JS from admin; defaults to none */
     .hero-divisions::before {
       content: '';
       position: absolute; top: 0; right: 0; bottom: 0; left: 0;
       z-index: 0;
-      background: var(--divisions-bg, url('media/bpbackground.gif') center/cover no-repeat);
+      background: var(--divisions-bg, none);
     }
     .hero-divisions::after {
       content: '';
@@ -2422,8 +2422,8 @@
       });
     }
 
-    // Hero divisions background — set CSS var; respect heroBgEnabled toggle
-    if (cfg.heroBg !== undefined) {
+    // Hero divisions background — always set CSS var so fallback GIF never shows
+    {
       const bgOn = cfg.heroBgEnabled !== false;
       document.documentElement.style.setProperty(
         '--divisions-bg',
@@ -2484,7 +2484,8 @@
       }
 
       // Hero divisions background — update CSS var; respect enabled toggle
-      if ('hero_bg' in s) {
+      // Always set the var (even if key absent) so the CSS fallback GIF never shows
+      {
         const bgOn = s.hero_bg_enabled !== '0';
         document.documentElement.style.setProperty(
           '--divisions-bg',
