@@ -574,9 +574,7 @@
     .work-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
+      gap: 2px;
     }
     @media (max-width: 860px) { .work-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 500px) { .work-grid { grid-template-columns: 1fr; } }
@@ -596,10 +594,10 @@
       background-position: center;
     }
     .work-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(196, 87, 26, 0.1);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     }
-    .work-card:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .work-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .card-thumb {
       aspect-ratio: 16 / 10;
