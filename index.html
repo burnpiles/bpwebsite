@@ -586,10 +586,16 @@
       cursor: pointer;
       display: flex;
       flex-direction: column;
-      transition: background 0.3s, transform 0.4s var(--ease-out), box-shadow 0.4s;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.4s var(--ease-out), box-shadow 0.4s;
+    }
+    /* Background image layer */
+    .work-card[data-bg] {
+      background-size: cover;
+      background-position: center;
     }
     .work-card:hover {
-      background: var(--surface-raised);
       transform: translateY(-6px);
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(196, 87, 26, 0.1);
     }
@@ -625,6 +631,17 @@
     .card-body {
       padding: 1.1rem 1.3rem 1.5rem;
       display: flex; flex-direction: column; gap: 0.25rem; flex: 1;
+      position: relative; z-index: 2;
+    }
+    /* Dark overlay when card has background image */
+    .work-card[data-bg] .card-body::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(12, 11, 9, 0.75) 0%, rgba(12, 11, 9, 0.9) 100%);
+      z-index: -1;
+    }
+    .work-card[data-bg]:hover .card-body::before {
+      background: linear-gradient(180deg, rgba(12, 11, 9, 0.6) 0%, rgba(12, 11, 9, 0.8) 100%);
     }
     .card-type {
       font-family: var(--font-mono);
@@ -2552,7 +2569,7 @@
       tags: ['Enterprise', 'AI', 'Flint'],
       thumbBg: '#181310',
       desc: 'A three-part internal AI literacy experience for 12,000 employees across 40 countries. Replaced a planned town hall with interactive workshops, honest documentation, and a clear vocabulary — not a verdict. Internal AI tool adoption improved measurably in the following quarter.',
-      thumb: '',
+      thumb: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&h=400&fit=crop',
       media: { kind: 'image', src: '' },
       link: '',
     },
@@ -2565,7 +2582,7 @@
       tags: ['Media', 'Interactive', 'Forge'],
       thumbBg: '#100c08',
       desc: 'Six weeks embedded with a streaming development team. Built two interactive narrative prototypes under real production conditions. Delivered go/no-go findings before full budgets were committed. One project launched. One didn\'t. Both were the right call.',
-      thumb: '',
+      thumb: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?w=600&h=400&fit=crop',
       media: { kind: 'image', src: '' },
       link: '',
     },
@@ -2578,7 +2595,7 @@
       tags: ['Education', 'AI', 'Flint'],
       thumbBg: '#0c1014',
       desc: 'Rebuilt a professional development curriculum around AI literacy for faculty and staff. Designed the program architecture, onboarded the right tools, and trained internal champions to run it independently. Expanded to three additional colleges after handover. No retainer.',
-      thumb: '',
+      thumb: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&h=400&fit=crop',
       media: { kind: 'image', src: '' },
       link: '',
     },
@@ -2587,37 +2604,37 @@
       title: 'Real-Time AI Main Stage Visuals',
       client: 'Major Music Festival',
       year: '2024',
-      type: 'Live Events + Technical Production',
+      type: 'Live Events',
       tags: ['Live Events', 'AI', 'Forge'],
       thumbBg: '#120e06',
       desc: 'Scoped, staffed, and built a real-time AI visual system responsive to the live audio feed — in three weeks, for a main-stage outdoor audience. Full dress rehearsal 36 hours before doors opened. Worked on night one. Worked better on night two.',
-      thumb: '',
+      thumb: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&h=400&fit=crop',
       media: { kind: 'video', src: '' },
       link: '',
     },
     {
       id: 'p05',
-      title: 'XR Safety Training Environment',
+      title: 'XR Safety Training',
       client: 'Fortune 500 Manufacturer',
       year: '2023',
       type: 'XR Experience Design',
       tags: ['Enterprise', 'XR', 'Forge'],
       thumbBg: '#0a100d',
       desc: 'Designed and built an XR-based training environment for high-risk manufacturing procedures. Replaced a 3-day in-person certification program with a repeatable, scalable spatial experience that workers could run on-shift, on demand.',
-      thumb: '',
+      thumb: 'https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=600&h=400&fit=crop',
       media: { kind: 'image', src: '' },
       link: '',
     },
     {
       id: 'p06',
       title: 'AI Workflow Integration',
-      client: 'Mid-Size Creative Agency',
+      client: 'Creative Agency',
       year: '2024',
       type: 'Advisory & Talent',
       tags: ['Agency', 'AI', 'Fuel'],
       thumbBg: '#110b0a',
       desc: 'Six-month advisory engagement helping a mid-size creative agency identify, pilot, and integrate AI tools across their production workflow. Included two specialized talent introductions that became full-time placements.',
-      thumb: '',
+      thumb: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=600&h=400&fit=crop',
       media: { kind: 'image', src: '' },
       link: '',
     },
@@ -2635,14 +2652,13 @@
       card.setAttribute('tabindex', '0');
       card.setAttribute('aria-label', p.title + ' — ' + p.client);
 
-      const thumbHTML = p.thumb
-        ? `<img src="${p.thumb}" alt="${esc(p.title)}" loading="lazy">`
-        : `<div class="card-placeholder" style="background:${p.thumbBg}">
-             <span class="card-placeholder-num">0${i + 1}</span>
-           </div>`;
+      // Use thumb as background image on the whole card
+      if (p.thumb) {
+        card.style.backgroundImage = `url(${p.thumb})`;
+        card.setAttribute('data-bg', '1');
+      }
 
       card.innerHTML = `
-        <div class="card-thumb">${thumbHTML}</div>
         <div class="card-body">
           <span class="card-type">${esc(p.type)}</span>
           <h3 class="card-title">${esc(p.title)}</h3>
