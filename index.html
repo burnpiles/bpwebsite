@@ -1441,6 +1441,15 @@
     .arrow-btn:disabled { cursor: not-allowed; }
     .arrow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
+    .enter-hint {
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 0.6rem;
+      letter-spacing: 0.08em;
+    }
+
     .step1-err {
       font-family: var(--font-body);
       font-size: 0.7rem;
@@ -2121,6 +2130,7 @@
             <input type="email" id="intake-email" class="intake-field" placeholder="Email" required>
           </div>
           <button class="contact-next-btn" id="contact-btn" type="button" disabled>Next →</button>
+          <p class="enter-hint">press enter to proceed</p>
         </div>
 
         <!-- Step 1: Text input -->
@@ -2139,6 +2149,7 @@
             <button class="arrow-btn" id="go-btn" type="button" disabled aria-label="Continue">→</button>
           </div>
           <div class="step1-err" id="step1-err" role="alert" aria-live="assertive"></div>
+          <p class="enter-hint">press enter to proceed</p>
         </div>
 
         <!-- Step 2: Questions -->
@@ -3037,6 +3048,15 @@
     userEmail   = emailInput.value.trim();
     showStep('step-1');
   });
+  // Enter key on contact fields advances to next step
+  [nameInput, compInput, emailInput].forEach(f => {
+    f.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !contactBtn.disabled) {
+        e.preventDefault();
+        contactBtn.click();
+      }
+    });
+  });
 
   /* ---- Reset button ---- */
   resetBtn.addEventListener('click', () => {
@@ -3107,9 +3127,9 @@
     }
   });
 
-  /* Ctrl+Enter shortcut */
+  /* Enter key advances when ready */
   textarea.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.ctrlKey && !goBtn.disabled) {
+    if (e.key === 'Enter' && !e.shiftKey && !goBtn.disabled) {
       e.preventDefault();
       goBtn.click();
     }
