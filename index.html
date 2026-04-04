@@ -398,7 +398,6 @@
     }
 
     .hero-model-btn-wrap {
-      background: var(--bg);
       position: relative; z-index: 2;
       text-align: center;
       padding: clamp(0.8rem, 1.5vh, 1.2rem) 0;
@@ -450,17 +449,9 @@
       position: relative; z-index: 2;
     }
 
-    /* Ember canvas inside divisions — above the dark overlay (z:1), below hdiv text (z:3) */
-    .hero-div-canvas {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      z-index: 2;
-      pointer-events: none;
-    }
-
     .hdiv {
       position: relative;
-      z-index: 3;
+      z-index: 2;
       overflow: hidden;
       padding: clamp(1.6rem, 3vw, 2.5rem) clamp(1.8rem, 3.5vw, 3rem) clamp(2rem, 4vh, 3rem);
       border-right: 1px solid var(--border);
@@ -2020,7 +2011,6 @@
       <span class="label">Our Services</span>
     </div>
     <div class="hero-divisions" aria-label="How we work">
-      <canvas class="hero-div-canvas" aria-hidden="true"></canvas>
 
       <div class="hdiv" data-div="flint">
         <canvas class="hdiv-canvas" aria-hidden="true"></canvas>
@@ -2692,7 +2682,7 @@
     heroCanvas.height = window.innerHeight;
 
     const heroEmber = new EmberSystem(heroCanvas, {
-      count: _isMobile ? 80 : _isTablet ? 150 : 400,
+      count: _isMobile ? 120 : _isTablet ? 250 : 700,
       speedMult: 2.5,
       glowColor: 'rgba(240, 100, 20, 0.9)',
       glowMid:   'rgba(220, 75, 15, 0.45)',
@@ -2731,34 +2721,6 @@
       }, 120);
     });
 
-    // ---- Ember canvas inside hero-divisions (above dark overlay, below panel text) ----
-    const divCanvas = document.querySelector('.hero-div-canvas');
-    const divsEl = document.querySelector('.hero-divisions');
-    if (divCanvas && divsEl) {
-      divCanvas.width  = window.innerWidth;
-      divCanvas.height = divsEl.offsetHeight || 300;
-      const divEmber = new EmberSystem(divCanvas, {
-        count: _isMobile ? 40 : _isTablet ? 80 : 200,
-        speedMult: 2.5,
-        glowColor: 'rgba(240, 100, 20, 0.9)',
-        glowMid:   'rgba(220, 75, 15, 0.45)',
-        coreColor: 'rgba(255, 220, 110, 1)',
-        oscAmp: 0.5,
-        flameHeight: 0.6,
-        flameIntensity: 1.0,
-      });
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        divEmber.W = divCanvas.width  = divsEl.offsetWidth  || window.innerWidth;
-        divEmber.H = divCanvas.height = divsEl.offsetHeight || 300;
-      }));
-      (function divEmberLoop() { divEmber.tick(); requestAnimationFrame(divEmberLoop); }());
-      window.addEventListener('resize', () => {
-        divCanvas.width  = divsEl.offsetWidth  || window.innerWidth;
-        divCanvas.height = divsEl.offsetHeight || 300;
-        divEmber.W = divCanvas.width;
-        divEmber.H = divCanvas.height;
-      });
-    }
   }
 
   /* ============================================================
