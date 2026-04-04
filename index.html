@@ -2403,9 +2403,10 @@
     }).catch(e => console.warn('Supabase settings error:', e));
 
     // Beehiiv — fetch latest posts
-    if (cfg.beehiivApiKey && cfg.beehiivPubId) {
-      fetch(`https://api.beehiiv.com/v2/publications/${cfg.beehiivPubId}/posts?limit=3&status=confirmed&order_by=publish_date&direction=desc`, {
-        headers: { 'Authorization': `Bearer ${cfg.beehiivApiKey}` }
+    let bhCfg; try { bhCfg = JSON.parse(localStorage.getItem('bp_admin') || 'null'); } catch(e) {}
+    if (bhCfg?.beehiivApiKey && bhCfg?.beehiivPubId) {
+      fetch(`https://api.beehiiv.com/v2/publications/${bhCfg.beehiivPubId}/posts?limit=3&status=confirmed&order_by=publish_date&direction=desc`, {
+        headers: { 'Authorization': `Bearer ${bhCfg.beehiivApiKey}` }
       })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(data => {
