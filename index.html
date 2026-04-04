@@ -1770,6 +1770,19 @@
     #newsletter {
       padding: clamp(4rem, 8vh, 6rem) 0;
       text-align: center;
+      position: relative;
+    }
+    #newsletter::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.90);
+      z-index: 0;
+      pointer-events: none;
+    }
+    #newsletter > * {
+      position: relative;
+      z-index: 1;
     }
     #newsletter h2 {
       font-family: var(--font-display);
