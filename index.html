@@ -1598,6 +1598,10 @@
       margin: 0 auto;
       gap: 0;
     }
+    @media (max-width: 480px) {
+      .newsletter-form { flex-direction: column; gap: 0.5rem; }
+      .newsletter-input { border-right: 1px solid var(--border-mid) !important; }
+    }
     .newsletter-input {
       flex: 1;
       padding: 0.8rem 1rem;
@@ -2048,10 +2052,7 @@
   <div class="wrap">
     <div class="origin-layout reveal">
       <div class="origin-media">
-        <div class="origin-placeholder">
-          <span style="font-family:var(--font-display);font-size:2rem">◼</span>
-          <span style="font-family:var(--font-mono);font-size:0.6rem;margin-top:0.4rem">Photo placeholder</span>
-        </div>
+        <img src="https://images.unsplash.com/photo-1563685965158-65cf13b735ea?w=600&h=450&fit=crop" alt="Burn pile — where the name comes from" style="width:100%;height:100%;object-fit:cover;display:block">
       </div>
       <div class="origin-content">
         <span class="label" id="origin-title">Where the name comes from</span>
@@ -2093,6 +2094,8 @@
     <div class="footer-inner">
       <div class="footer-left">
         <a href="mailto:hey@burnpiles.com" class="footer-email">hey@burnpiles.com</a>
+        <span style="color:var(--text-dim);margin:0 0.5rem">|</span>
+        <a href="https://www.linkedin.com/in/chadwickmturner" target="_blank" rel="noopener noreferrer" class="footer-email">Chadwick</a>
       </div>
       <div class="footer-social">
         <!-- Instagram -->
@@ -2114,7 +2117,7 @@
           </svg>
         </a>
       </div>
-      <span class="footer-copy">© 2026 Burnpiles · <a href="https://www.linkedin.com/in/chadwickmturner" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted);text-decoration:none">The Founder</a></span>
+      <span class="footer-copy">© 2026 Burnpiles</span>
     </div>
   </div>
 </footer>
