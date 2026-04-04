@@ -3400,20 +3400,19 @@
     }
     document.body.classList.add('splash-active');
 
-    // Force canvas dimensions — use documentElement for Safari/iPad compatibility
-    const dpr = window.devicePixelRatio || 1;
-    const W = Math.max(window.innerWidth, document.documentElement.clientWidth, screen.width) || 1024;
-    const H = Math.max(window.innerHeight, document.documentElement.clientHeight, screen.height) || 768;
-    splashCanvas.width = W * dpr;
-    splashCanvas.height = H * dpr;
+    // Force canvas dimensions — use fallbacks for Safari/iPad
+    const W = document.documentElement.clientWidth || window.innerWidth || screen.width || 1024;
+    const H = document.documentElement.clientHeight || window.innerHeight || screen.height || 768;
+    splashCanvas.width = W;
+    splashCanvas.height = H;
     splashCanvas.style.width = '100%';
     splashCanvas.style.height = '100%';
     const ctx = splashCanvas.getContext('2d');
-    ctx.scale(dpr, dpr);
 
-    // Create a dedicated splash ember system (Fuel-level intensity)
+    // Create a dedicated splash ember system — fewer on mobile for performance
+    const isMobile = W < 768;
     const splashCfg = {
-      count: 500, speedMult: 1.6,
+      count: isMobile ? 150 : 500, speedMult: 1.6,
       glowColor: 'rgba(240, 100, 20, 0.9)',
       glowMid: 'rgba(220, 75, 15, 0.45)',
       coreColor: 'rgba(255, 220, 110, 1)',
