@@ -675,12 +675,12 @@
     return `
       <span class="proj-edit-title">Editing: ${esc(p.title)}</span>
       <div class="field-row">
-        <div class="field"><label>Title <span style="color:var(--text-dim);font-size:0.6rem">(max 60)</span></label><input type="text" id="pf-${i}-title" value="${esc(p.title)}" maxlength="60"></div>
-        <div class="field"><label>Client</label><input type="text" id="pf-${i}-client" value="${esc(p.client)}"></div>
+        <div class="field"><label>Title <span style="color:var(--text-dim);font-size:0.6rem">(max 25 for mobile)</span></label><input type="text" id="pf-${i}-title" value="${esc(p.title)}" maxlength="40"></div>
+        <div class="field"><label>Client <span style="color:var(--text-dim);font-size:0.6rem">(max 25 for mobile)</span></label><input type="text" id="pf-${i}-client" value="${esc(p.client)}" maxlength="35"></div>
       </div>
       <div class="field-row">
         <div class="field"><label>Year</label><input type="text" id="pf-${i}-year" value="${esc(p.year)}"></div>
-        <div class="field"><label>Type / Category <span style="color:var(--text-dim);font-size:0.6rem">(max 40)</span></label><input type="text" id="pf-${i}-type" value="${esc(p.type)}" maxlength="40"></div>
+        <div class="field"><label>Type / Category <span style="color:var(--text-dim);font-size:0.6rem">(max 25 for mobile)</span></label><input type="text" id="pf-${i}-type" value="${esc(p.type)}" maxlength="30"></div>
       </div>
       <div class="field">
         <label>Description <span style="color:var(--text-dim);font-size:0.6rem">(max 300)</span></label>

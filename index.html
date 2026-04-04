@@ -525,27 +525,17 @@
       .path-btn { padding: 0.6rem 0.8rem; font-size: 0.6rem; }
       .flywheel-work-btn { padding-top: 0.8rem; }
 
-      /* Compact portfolio on mobile — list rows, no thumbnails */
-      .work-grid { grid-template-columns: 1fr !important; gap: 0 !important; border: none !important; }
-      .work-card {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 0.8rem;
-        border-bottom: 1px solid var(--border);
-      }
-      .work-card:last-child { border-bottom: none; }
+      /* Compact portfolio on mobile — 2x3 grid */
+      .work-grid { grid-template-columns: 1fr 1fr !important; gap: 1px !important; }
       .card-thumb { display: none; }
       .card-body {
-        padding: 0.7rem 0.3rem;
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 0.3rem 0.8rem;
+        padding: 0.7rem 0.6rem;
+        gap: 0.15rem;
       }
-      .card-type { font-size: 0.5rem; }
-      .card-title { font-size: clamp(0.85rem, 3vw, 1rem); }
-      .card-client, .card-year { font-size: 0.6rem; }
+      .card-type { font-size: 0.42rem; letter-spacing: 0.15em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .card-title { font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .card-client { font-size: 0.55rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .card-year { font-size: 0.5rem; padding-top: 0.3rem; }
 
       /* Flywheel — tight side-by-side on mobile */
       #flywheel .wrap { padding-left: 1.2rem; padding-right: 1.2rem; }
@@ -1787,7 +1777,7 @@
     <div class="wrap hero-top">
       <p class="hero-eyebrow">Burn the noise. Keep the signal.</p>
       <h1 class="hero-wordmark" id="hero-title">Burnpiles</h1>
-      <a href="#intake" class="hero-cta">What can we build? →</a>
+      <a href="#intake" class="hero-cta">How can we help? →</a>
     </div>
 
     <!-- Three ember panels — always side by side, plain divs (no button quirks) -->
@@ -1909,7 +1899,7 @@
         <h2 id="work-title">Some of what we've built.</h2>
       </div>
       <div class="work-grid" id="work-grid" role="list" aria-label="Portfolio"></div>
-      <a href="#intake" class="work-build-btn reveal">What can we build? →</a>
+      <a href="#intake" class="work-build-btn reveal">How can we help? →</a>
     </div>
   </section>
 
@@ -1923,7 +1913,7 @@
         <p class="dmod-tagline" id="dmod-tagline"></p>
       </div>
       <div class="dmod-prices" id="dmod-prices"></div>
-      <button class="dmod-cta" id="dmod-cta">What can we build? →</button>
+      <button class="dmod-cta" id="dmod-cta">How can we help? →</button>
     </div>
   </div>
 
@@ -1954,7 +1944,7 @@
   <section id="intake" aria-labelledby="intake-title">
     <div class="wrap">
       <div class="intake-head reveal">
-        <h2 id="intake-title">What can we build?</h2>
+        <h2 id="intake-title">How can we help?</h2>
         <p class="intake-sub"><span style="color:var(--accent-bright)">A little about you, then three quick questions.</span><br>Then we'll find the signal.</p>
       </div>
 
@@ -2534,7 +2524,7 @@
         <div class="path-answer">
           <span class="path-answer-label">${ans.label}</span>
           <p class="path-answer-text">${ans.text}</p>
-          <a href="#intake" class="path-answer-cta">What can we build? →</a>
+          <a href="#intake" class="path-answer-cta">How can we help? →</a>
         </div>`;
       // Scroll answer into view
       setTimeout(() => pathResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
