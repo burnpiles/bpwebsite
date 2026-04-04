@@ -72,9 +72,7 @@
     #splash {
       position: fixed; inset: 0; z-index: 10000;
       background: #0c0b09;
-      display: flex; flex-direction: column;
-      justify-content: center;
-      padding: 0 clamp(1.5rem, 5vw, 4rem);
+      display: flex; align-items: center; justify-content: center;
       transition: opacity 0.8s ease-out;
     }
     #splash-bg {
@@ -98,29 +96,18 @@
     }
     .splash-content {
       position: relative; z-index: 2;
+      text-align: center;
     }
-    .splash-title {
+    .splash-tagline {
       font-family: var(--font-mono);
-      font-size: clamp(3rem, 9vw, 7.5rem);
+      font-size: clamp(1.8rem, 5vw, 3.5rem);
       font-weight: 300;
-      letter-spacing: 0.25em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      line-height: 1;
       color: #eee8dc;
       text-shadow: 0 0 60px rgba(196, 87, 26, 0.5), 0 0 120px rgba(196, 87, 26, 0.25);
       opacity: 0;
       animation: splashTextIn 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s forwards;
-    }
-    .splash-tagline {
-      font-family: var(--font-mono);
-      font-size: clamp(1.5rem, 3.2vw, 2.2rem);
-      font-weight: 300;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: #f59542;
-      margin-top: clamp(1rem, 2vh, 1.5rem);
-      opacity: 0;
-      animation: splashTextIn 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.2s forwards;
       line-height: 1.6;
     }
     @keyframes splashTextIn {
@@ -128,8 +115,7 @@
       100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
     }
     @media (max-width: 720px) {
-      .splash-title { font-size: clamp(2rem, 11vw, 3.5rem); }
-      .splash-tagline { font-size: clamp(0.9rem, 4vw, 1.4rem); }
+      .splash-tagline { font-size: clamp(1.2rem, 6vw, 2rem); }
     }
     body.splash-active { overflow: hidden; }
     @media (prefers-reduced-motion: reduce) {
@@ -166,7 +152,7 @@
     .label {
       display: block;
       font-family: var(--font-mono);
-      font-size: 0.65rem;
+      font-size: 1.14rem;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--text-muted);
@@ -200,8 +186,7 @@
     }
     /* Hero background image (set via admin or JS) */
     .hero-bg {
-      position: absolute; top: 0; left: 0; right: 0;
-      height: 65%; /* only covers the hero-top area, not services */
+      position: absolute; inset: 0;
       z-index: 0;
       overflow: hidden;
     }
@@ -294,7 +279,7 @@
       border: 1px solid var(--border-accent);
       color: var(--accent-bright);
       font-family: var(--font-mono);
-      font-size: 1.4rem;
+      font-size: 1.05rem;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       text-decoration: none;
@@ -399,7 +384,6 @@
     .divisions-head {
       padding: clamp(1.5rem, 3vh, 2.5rem) clamp(1.5rem, 5vw, 4rem) 0;
       position: relative; z-index: 1;
-      background: var(--bg);
     }
 
     .hero-divisions {
@@ -407,7 +391,6 @@
       grid-template-columns: 1fr 1fr 1fr;
       border-top: 1px solid var(--border);
       position: relative; z-index: 1;
-      background: var(--bg);
     }
 
     .hdiv {
@@ -936,8 +919,8 @@
 
     .dmod-header { margin-bottom: 1.2rem; }
     .dmod-label {
-      font-family: var(--font-mono);
-      font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase;
+      font-family: var(--font-body);
+      font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase;
       color: var(--text); display: block; margin-bottom: 0.5rem;
     }
     .dmod-name {
@@ -965,18 +948,18 @@
     }
     .dmod-price-row:last-child { border-bottom: 1px solid var(--border); }
     .dmod-price-name {
-      font-family: var(--font-mono);
-      font-size: 0.68rem; color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.8rem; color: var(--text);
       display: block; margin-bottom: 0.15rem;
     }
     .dmod-price-amount {
-      font-family: var(--font-display);
-      font-size: clamp(1.05rem, 3.5vw, 1.25rem);
-      font-weight: 300; color: var(--text);
+      font-family: var(--font-body);
+      font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+      font-weight: 400; color: var(--text);
     }
     .dmod-price-note {
-      font-family: var(--font-mono);
-      font-size: 0.58rem; color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.72rem; color: var(--text-muted);
       margin-top: 0.1rem; display: block;
     }
 
@@ -1904,10 +1887,8 @@
 
 <!-- Splash screen -->
 <div id="splash" aria-hidden="true">
-  <div id="splash-bg"><img src="bpbackground.gif" alt="" loading="eager"></div>
   <canvas id="splash-canvas"></canvas>
   <div class="splash-content">
-    <div class="splash-title">BURNPILES</div>
     <div class="splash-tagline">Burn the noise.<br>Keep the signal.</div>
   </div>
 </div>
@@ -2043,7 +2024,7 @@
   <section id="work" aria-labelledby="work-title">
     <div class="wrap">
       <div class="work-head reveal">
-        <span class="label">Selected work</span>
+        <span class="label">Featured work</span>
         <h2 id="work-title">Some of what we've built.</h2>
       </div>
       <div class="work-grid" id="work-grid" role="list" aria-label="Portfolio"></div>
@@ -2156,7 +2137,7 @@
               <div class="result-divider"></div>
               <p class="result-next">The next step is a 30-minute call. No deck, no prep — just a real conversation about what you need.</p>
               <a
-                href="https://calendly.com/burnpiles/intro"
+                href="https://calendly.com/burnpiles/30min"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="result-cta"
