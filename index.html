@@ -228,6 +228,7 @@
     /* Full-hero ember canvas — behind everything */
     #hero-canvas {
       position: absolute; inset: 0;
+      width: 100%; height: 100%;
       z-index: 0;
       pointer-events: none;
     }
@@ -2501,8 +2502,10 @@
     }
 
     resize() {
-      this.W = this.canvas.width  = this.canvas.offsetWidth;
-      this.H = this.canvas.height = this.canvas.offsetHeight;
+      const w = this.canvas.offsetWidth  || this.canvas.parentElement?.offsetWidth  || window.innerWidth;
+      const h = this.canvas.offsetHeight || this.canvas.parentElement?.offsetHeight || window.innerHeight;
+      this.W = this.canvas.width  = w;
+      this.H = this.canvas.height = h;
     }
 
     spawn(scattered) {
@@ -2615,10 +2618,10 @@
     }
   }
 
-  // ---- Full-hero ember canvas — deferred so layout is complete before sizing ----
+  // ---- Full-hero ember canvas — init on load so layout is fully stable ----
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!prefersReducedMotion) {
-    requestAnimationFrame(() => {
+    window.addEventListener('load', () => {
       const heroCanvas = document.getElementById('hero-canvas');
       const heroEl     = document.getElementById('hero');
       heroCanvas.width  = Math.max(heroEl.offsetWidth,  window.innerWidth)  || 1024;
@@ -2648,7 +2651,7 @@
           heroEmber.resize();
         }, 120);
       });
-    });
+    }, { once: true });
   }
 
   /* ============================================================
