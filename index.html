@@ -473,13 +473,14 @@
         display: none;
       }
       .hdiv-pricing { display: none; }
-      /* Hero fills mobile viewport — centered layout */
-      #hero { min-height: 100svh; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+      /* Hero fills mobile viewport — top content centered, services at bottom */
+      #hero { min-height: 100svh; min-height: 100vh; display: flex; flex-direction: column; }
       .hero-top {
+        flex: 1;
+        display: flex; flex-direction: column;
+        justify-content: center;
         padding-top: 0 !important;
-        padding-bottom: clamp(0.5rem, 1vh, 1rem) !important;
-        flex: 0;
-        justify-content: flex-end;
+        padding-bottom: 0 !important;
       }
       .hero-eyebrow { margin-bottom: 0.4rem; font-size: clamp(0.52rem, 2.8vw, 0.7rem); }
       .hero-wordmark { font-size: clamp(2rem, 11vw, 3.5rem); }
