@@ -2203,7 +2203,9 @@
   <div class="wrap">
     <div class="origin-layout reveal">
       <div class="origin-media" id="origin-media">
-        <img src="media/burnpile.jpeg" alt="The burn pile" style="width:100%;height:100%;object-fit:cover;display:block">
+        <div class="origin-placeholder">
+          <span style="font-family:var(--font-display);font-size:2rem">🔥</span>
+        </div>
       </div>
       <div class="origin-content">
         <span class="label" id="origin-title">Origin Story</span>
@@ -2350,7 +2352,12 @@
       window._adminProjects = cfg.projects;
     }
 
-    // Fetch settings from Supabase and apply
+  })();
+
+  /* ============================================================
+     SUPABASE SETTINGS — fetch and apply (runs independently)
+     ============================================================ */
+  (function loadSupabaseSettings() {
     fetch('https://ylpfupjilqfxfattwikx.supabase.co/rest/v1/settings?select=*', {
       headers: { 'apikey': 'sb_publishable_fUZQYiwQYWI_e63PYOfgzQ_jQ2qyByi', 'Authorization': 'Bearer sb_publishable_fUZQYiwQYWI_e63PYOfgzQ_jQ2qyByi' }
     }).then(r => r.json()).then(rows => {
@@ -2360,14 +2367,20 @@
       if (s.calendly_url) {
         document.querySelectorAll('a[href*="calendly.com"]').forEach(a => a.href = s.calendly_url);
       }
+      // Hero background
+      if (s.hero_bg) {
+        const bg = document.getElementById('hero-bg');
+        if (bg && !bg.querySelector('img[src*="' + s.hero_bg.slice(-20) + '"]')) {
+          bg.innerHTML = `<img src="${s.hero_bg}" alt="" loading="eager">`;
+        }
+      }
       // Origin image
       if (s.origin_image) {
         const om = document.querySelector('.origin-media');
         if (om) om.innerHTML = `<img src="${s.origin_image}" alt="Origin Story" style="width:100%;height:100%;object-fit:cover;display:block">`;
       }
       // Social links
-      const socials = document.querySelectorAll('.footer-social a');
-      socials.forEach(a => {
+      document.querySelectorAll('.footer-social a').forEach(a => {
         const label = a.getAttribute('aria-label') || '';
         if (label.includes('Instagram') && s.social_instagram) a.href = s.social_instagram;
         if (label.includes('LinkedIn') && s.social_linkedin) a.href = s.social_linkedin;
@@ -2380,7 +2393,14 @@
         if (ogMeta) ogMeta.content = s.og_image;
         if (twMeta) twMeta.content = s.og_image;
       }
-    }).catch(e => console.warn('Settings fetch error:', e));
+      // Email
+      if (s.email) {
+        document.querySelectorAll('a[href^="mailto:"]').forEach(a => {
+          a.href = 'mailto:' + s.email;
+          a.textContent = s.email;
+        });
+      }
+    }).catch(e => console.warn('Supabase settings error:', e));
 
     // Beehiiv — fetch latest posts
     if (cfg.beehiivApiKey && cfg.beehiivPubId) {
