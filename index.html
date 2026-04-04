@@ -2218,10 +2218,12 @@
     <h2>The Burnpiles Newsletter</h2>
     <p>Signal, not noise. Delivered occasionally.</p>
     <div class="newsletter-posts" id="newsletter-posts" style="display:none"></div>
-    <div class="newsletter-embed">
-      <script async src="https://subscribe-forms.beehiiv.com/embed.js"></script>
-      <iframe src="https://subscribe-forms.beehiiv.com/178cea31-9b4d-4202-8dfc-4d78cc2bcc71" class="beehiiv-embed" data-test-id="beehiiv-embed" frameborder="0" scrolling="no" style="width:100%;max-width:560px;height:52px;margin:0;border-radius:0;background-color:transparent;"></iframe>
-    </div>
+    <iframe name="nl-hidden-frame" style="display:none"></iframe>
+    <form class="newsletter-form" id="newsletter-form" action="https://app.beehiiv.com/forms/178cea31-9b4d-4202-8dfc-4d78cc2bcc71" method="POST" target="nl-hidden-frame">
+      <input type="email" name="email" class="newsletter-input" placeholder="you@company.com" required style="font-size:16px">
+      <button type="submit" class="newsletter-btn">Subscribe</button>
+    </form>
+    <p class="newsletter-status" id="newsletter-status"></p>
   </div>
 </section>
 
@@ -3420,7 +3422,18 @@
     return JSON.parse(match[0]);
   }
 
-  /* ---- Newsletter: handled by Beehiiv embed iframe ---- */
+  /* ---- Newsletter subscribe ---- */
+  const nlForm = document.getElementById('newsletter-form');
+  const nlStatus = document.getElementById('newsletter-status');
+  if (nlForm) {
+    nlForm.addEventListener('submit', () => {
+      setTimeout(() => {
+        nlStatus.textContent = "You're in. Welcome to the pile.";
+        nlStatus.style.color = '#4ade80';
+        nlForm.querySelector('input[name="email"]').value = '';
+      }, 500);
+    });
+  }
 
   /* ---- Splash screen ---- */
   (function initSplash() {
