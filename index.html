@@ -654,7 +654,7 @@
 
       /* Portfolio on mobile — single column, compact */
       .work-grid { grid-template-columns: 1fr !important; gap: 2px !important; }
-      .card-body { padding: 0.8rem 1rem; }
+      .card-body { padding: 1rem 1rem 1.3rem; }
       .card-type { font-size: 0.5rem; }
       .card-title { font-size: 0.9rem; }
       .card-attrib { font-size: 0.6rem; padding-top: 0.3rem; }
@@ -715,7 +715,7 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 2px;
     }
-    @media (max-width: 860px) { .work-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 860px) { .work-grid { grid-template-columns: repeat(2, 1fr); } .card-body { padding: 1.25rem 1.15rem 1.7rem; } }
     @media (max-width: 500px) { .work-grid { grid-template-columns: 1fr; } }
 
     .work-card {
@@ -780,7 +780,7 @@
     }
 
     .card-body {
-      padding: 1.1rem 1.3rem 1.5rem;
+      padding: 1.4rem 1.3rem 1.9rem;
       display: flex; flex-direction: column; gap: 0.25rem; flex: 1;
       position: relative; z-index: 2;
     }
