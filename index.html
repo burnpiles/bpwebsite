@@ -649,11 +649,13 @@
       display: flex; flex-direction: column; gap: 0.25rem; flex: 1;
       position: relative; z-index: 2;
     }
-    /* Dark overlay when card has background image */
+    /* Dark pill overlay behind text when card has background image */
     .work-card[data-bg] .card-body::before {
       content: '';
-      position: absolute; inset: 0;
+      position: absolute;
+      top: 0.6rem; left: 0.6rem; right: 0.6rem; bottom: 0.6rem;
       background: rgba(12, 11, 9, 0.85);
+      border-radius: 8px;
       z-index: -1;
     }
     .work-card[data-bg]:hover .card-body::before {
@@ -673,11 +675,11 @@
     }
     .card-client {
       font-family: var(--font-mono);
-      font-size: 0.7rem; color: var(--text-muted);
+      font-size: 0.7rem; color: var(--text);
     }
     .card-year {
       font-family: var(--font-mono);
-      font-size: 0.62rem; color: var(--text-dim);
+      font-size: 0.62rem; color: var(--text);
       margin-top: auto; padding-top: 0.6rem;
     }
 
@@ -1118,6 +1120,7 @@
     }
 
     .path-btn {
+      width: 100%;
       background: #fff;
       border: 1px solid rgba(26, 24, 18, 0.12);
       color: rgba(26, 24, 18, 0.6);
@@ -1127,6 +1130,7 @@
       padding: 0.85rem 1rem;
       cursor: pointer;
       text-align: left;
+      box-sizing: border-box;
       transition: border-color 0.2s, color 0.2s, background 0.2s;
       border-radius: 0;
     }
@@ -1144,6 +1148,8 @@
       padding: 1.2rem 1.4rem;
       background: #fff;
       border: 1px solid rgba(26, 24, 18, 0.12);
+      box-sizing: border-box;
+      width: 100%;
       animation: fadeUp 0.35s var(--ease-out) forwards;
     }
     @keyframes fadeUp {
