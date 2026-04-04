@@ -722,22 +722,20 @@
       display: flex; flex-direction: column; gap: 0.25rem; flex: 1;
       position: relative; z-index: 2;
     }
-    /* Dark pill overlay behind text when card has background image */
+    /* Dark overlay behind text when card has background image */
     .work-card[data-bg] .card-body::before {
       content: '';
-      position: absolute;
-      top: 0.6rem; left: 0.6rem; right: 0.6rem; bottom: 0.6rem;
-      background: rgba(12, 11, 9, 0.85);
-      border-radius: 8px;
+      position: absolute; inset: 0;
+      background: rgba(12, 11, 9, 0.82);
       z-index: -1;
     }
     .work-card[data-bg]:hover .card-body::before {
-      background: rgba(12, 11, 9, 0.75);
+      background: rgba(12, 11, 9, 0.7);
     }
     .card-type {
       font-family: var(--font-mono);
       font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--accent);
+      color: #f59542;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
     }
     .card-title {
@@ -748,11 +746,11 @@
     }
     .card-client {
       font-family: var(--font-mono);
-      font-size: 0.7rem; color: var(--text);
+      font-size: 0.84rem; color: var(--text);
     }
     .card-year {
       font-family: var(--font-mono);
-      font-size: 0.62rem; color: var(--text);
+      font-size: 0.74rem; color: var(--text);
       margin-top: auto; padding-top: 0.6rem;
     }
 
