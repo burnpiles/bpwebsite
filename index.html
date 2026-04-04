@@ -911,14 +911,14 @@
        FLYWHEEL — how the three divisions connect
        ========================================= */
     #flywheel {
-      padding: clamp(4rem, 8vh, 7rem) 0;
+      padding: clamp(2.5rem, 5vh, 4rem) 0;
       background: #f0ebe3;
       color: #1a1812;
     }
 
     .flywheel-head {
       text-align: center;
-      margin-bottom: clamp(2.5rem, 5vh, 4.5rem);
+      margin-bottom: clamp(1.5rem, 3vh, 2.5rem);
     }
     #flywheel .label { color: var(--accent); }
     .flywheel-head h2 {
@@ -937,7 +937,7 @@
       align-items: center;
       padding: 0 1rem;
       gap: 0;
-      margin-bottom: clamp(3rem, 6vh, 5rem);
+      margin-bottom: clamp(1.5rem, 3vh, 2.5rem);
     }
 
     .fw-top-node {
@@ -1213,7 +1213,17 @@
     /* =========================================
        INTAKE FORM
        ========================================= */
-    #intake { padding: clamp(5rem, 10vh, 9rem) 0; }
+    #intake {
+      padding: clamp(3rem, 6vh, 5rem) 0;
+      min-height: 100dvh; min-height: 100vh;
+      display: flex; align-items: center;
+      box-sizing: border-box;
+    }
+    #intake > .wrap {
+      flex: 1;
+      display: flex; flex-direction: column;
+      justify-content: center;
+    }
 
     .intake-head { margin-bottom: 1.5rem; text-align: center; }
     .intake-head h2 {
@@ -2046,6 +2056,7 @@
 
       </div><!-- /intake-shell -->
       <button class="reset-btn" id="reset-btn">Start over ↺</button>
+      <a href="#origin" class="anchor-btn" style="margin-top:2rem">Why Burnpiles? ↓</a>
     </div>
   </section>
 
