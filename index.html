@@ -468,6 +468,12 @@
     }
 
     @media (max-width: 720px) {
+      /* Shift content up ~10% to visually center above browser chrome */
+      #flywheel > .wrap,
+      #work > .wrap,
+      #intake > .wrap,
+      #origin > .wrap { padding-bottom: 8vh; }
+
       /* Stacked compact rows on mobile */
       .hero-divisions { grid-template-columns: 1fr; gap: 0; }
       .hdiv {
