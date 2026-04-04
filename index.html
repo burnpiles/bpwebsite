@@ -1,0 +1,3296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Burnpiles is a creative technology studio and AI/XR consultancy. We know what to burn.">
+  <meta property="og:title" content="Burnpiles — Burn the noise. Keep the signal.">
+  <meta property="og:description" content="Creative technology studio. AI & XR consultancy. We know what to burn.">
+  <meta property="og:type" content="website">
+  <title>Burnpiles — Burn the noise. Keep the signal.</title>
+
+  <!--
+    ANTHROPIC API KEY
+    Set window.ANTHROPIC_API_KEY via Cloudflare Pages Functions / Worker
+    before this document is served, or inject it into a <script> tag at build time.
+    Without it, the intake form runs in demo mode with placeholder questions.
+  -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=IBM+Plex+Mono:ital,wght@0,300;0,400;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* =========================================
+       DESIGN TOKENS
+       ========================================= */
+    :root {
+      --bg:              #0c0b09;
+      --surface:         #131109;
+      --surface-raised:  #1a1812;
+      --text:            #eee8dc;
+      --text-muted:      #cdc4b1;
+      --text-dim:        #8a8170;
+      --accent:          #c4571a;
+      --accent-bright:   #df6824;
+      --accent-glow:     rgba(196, 87, 26, 0.11);
+      --border:          rgba(238, 232, 220, 0.07);
+      --border-mid:      rgba(238, 232, 220, 0.12);
+      --border-accent:   rgba(196, 87, 26, 0.28);
+      --font-display:    'Cormorant Garamond', Georgia, serif;
+      --font-mono:       'IBM Plex Mono', 'Courier New', monospace;
+      --font-body:       'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --ease-out:        cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* =========================================
+       RESET & BASE
+       ========================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-weight: 300;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+    /* =========================================
+       SPLASH SCREEN
+       ========================================= */
+    #splash {
+      position: fixed; inset: 0; z-index: 10000;
+      background: #0c0b09;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.8s ease-out;
+    }
+    #splash.done { opacity: 0; pointer-events: none; }
+    #splash-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+    }
+    .splash-text {
+      position: relative; z-index: 2;
+      font-family: var(--font-mono);
+      font-size: clamp(2.2rem, 10vw, 5.5rem);
+      font-weight: 300;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #eee8dc;
+      text-shadow: 0 0 60px rgba(196, 87, 26, 0.5), 0 0 120px rgba(196, 87, 26, 0.25);
+      opacity: 0;
+      animation: splashTextIn 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s forwards;
+    }
+    @keyframes splashTextIn {
+      0%   { opacity: 0; transform: scale(0.97); filter: blur(4px); }
+      100% { opacity: 1; transform: scale(1); filter: blur(0px); }
+    }
+    body.splash-active { overflow: hidden; }
+    @media (prefers-reduced-motion: reduce) {
+      #splash { display: none; }
+    }
+
+    /* Film grain texture overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px;
+    }
+
+    /* =========================================
+       LAYOUT
+       ========================================= */
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 clamp(1.5rem, 5vw, 4rem);
+    }
+    .wrap--narrow {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 clamp(1.5rem, 5vw, 4rem);
+    }
+
+    /* =========================================
+       TYPOGRAPHY
+       ========================================= */
+    .label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* =========================================
+       SCROLL REVEAL
+       ========================================= */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px) scale(0.98);
+      transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0) scale(1); }
+    .reveal.d1 { transition-delay: 0.1s; }
+    .reveal.d2 { transition-delay: 0.2s; }
+    .reveal.d3 { transition-delay: 0.3s; }
+    .reveal.d4 { transition-delay: 0.4s; }
+    .reveal.d5 { transition-delay: 0.5s; }
+
+    /* =========================================
+       HERO
+       ========================================= */
+    #hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .hero-top {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(5rem, 10vh, 9rem) 0 clamp(2.5rem, 4vh, 3.5rem);
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: clamp(0.6rem, 1.1vw, 0.75rem);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent-bright);
+      margin-bottom: clamp(1.2rem, 2.5vh, 2rem);
+    }
+
+    .hero-wordmark {
+      font-family: var(--font-mono);
+      font-size: clamp(3rem, 9vw, 7.5rem);
+      font-weight: 300;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      line-height: 1;
+      color: var(--text);
+      display: block;
+      position: relative;
+      text-shadow: 0 0 80px rgba(196, 87, 26, 0.15);
+    }
+    /* Pulsing ambient glow behind wordmark */
+    .hero-wordmark::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 120%; height: 200%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(ellipse, rgba(196, 87, 26, 0.08) 0%, transparent 65%);
+      animation: wordmarkPulse 4s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+    @keyframes wordmarkPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    .hero-tagline {
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 2.8vw, 2.4rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-top: clamp(1rem, 2vh, 1.6rem);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .hero-secondary {
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 2.4vw, 2rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--accent-bright);
+      margin-top: clamp(0.8rem, 1.5vh, 1.2rem);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .hero-cta {
+      display: inline-block;
+      margin-top: clamp(1.5rem, 3.5vh, 2.8rem);
+      padding: 0.9rem 2.4rem;
+      background: transparent;
+      border: 1px solid var(--border-accent);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color 0.3s, color 0.3s, background 0.3s;
+    }
+    .hero-cta:hover {
+      border-color: var(--accent-bright);
+      color: var(--accent-bright);
+      background: var(--accent-glow);
+    }
+    .hero-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+    /* =========================================
+       SECTION DIVIDER
+       ========================================= */
+    .rule {
+      width: 60%; max-width: 700px; height: 1px;
+      margin: 0 auto;
+      background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
+      opacity: 0.25;
+    }
+
+    /* =========================================
+       HERO DIVISIONS — three panels, bottom of hero
+       ========================================= */
+    .divisions-head {
+      padding: clamp(1.5rem, 3vh, 2.5rem) clamp(1.5rem, 5vw, 4rem) 0;
+    }
+
+    .hero-divisions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-top: 1px solid var(--border);
+    }
+
+    .hdiv {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(1.6rem, 3vw, 2.5rem) clamp(1.8rem, 3.5vw, 3rem) clamp(2rem, 4vh, 3rem);
+      border-right: 1px solid var(--border);
+      background: rgba(15, 13, 10, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow:
+        inset 0 1px 0 rgba(238, 232, 220, 0.06),
+        inset 0 0 30px rgba(196, 87, 26, 0.03);
+      transition: background 0.5s, box-shadow 0.5s;
+      cursor: pointer;
+      /* staggered entrance */
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    .hdiv.visible {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out), background 0.5s, box-shadow 0.5s;
+    }
+    .hdiv:nth-child(1).visible { transition-delay: 0s; }
+    .hdiv:nth-child(2).visible { transition-delay: 0.15s; }
+    .hdiv:nth-child(3).visible { transition-delay: 0.3s; }
+    .hdiv:last-child { border-right: none; }
+    .hdiv:hover {
+      background: rgba(20, 17, 12, 0.75);
+      box-shadow:
+        inset 0 1px 0 rgba(238, 232, 220, 0.1),
+        inset 0 0 50px rgba(196, 87, 26, 0.06),
+        0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Accent line at top — color per card */
+    .hdiv::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: var(--hdiv-accent, #b85a1a);
+      opacity: 0.5;
+      transition: opacity 0.4s;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .hdiv:hover::before { opacity: 1; }
+    .hdiv[data-div="flint"]  { --hdiv-accent: #b85a1a; }
+    .hdiv[data-div="forge"]  { --hdiv-accent: #df6824; }
+    .hdiv[data-div="fuel"]   { --hdiv-accent: #f59542; }
+
+    /* Bottom glow on hover */
+    .hdiv::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 60%;
+      background: radial-gradient(ellipse at 50% 100%, rgba(196, 87, 26, 0.08) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+    }
+    .hdiv:hover::after { opacity: 1; }
+
+    .hdiv-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hdiv-content {
+      position: relative; z-index: 2;
+      transition: transform 0.4s var(--ease-out);
+    }
+    .hdiv:hover .hdiv-content { transform: translateY(-4px); }
+
+    .hdiv-name {
+      display: block;
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 5.5vw, 6rem);
+      font-weight: 300;
+      letter-spacing: -0.04em;
+      line-height: 0.9;
+      color: var(--text);
+    }
+    /* Progressive orange: Flint (warm) → Forge (bright) → Fuel (hot) */
+    .hdiv-name.orange-1 { color: #b85a1a; transition: text-shadow 0.4s; }
+    .hdiv-name.orange-2 { color: #df6824; transition: text-shadow 0.4s; }
+    .hdiv-name.orange-3 { color: #f59542; transition: text-shadow 0.4s; }
+    .hdiv:hover .hdiv-name.orange-1 { text-shadow: 0 0 30px rgba(184, 90, 26, 0.4); }
+    .hdiv:hover .hdiv-name.orange-2 { text-shadow: 0 0 30px rgba(223, 104, 36, 0.5); }
+    .hdiv:hover .hdiv-name.orange-3 { text-shadow: 0 0 30px rgba(245, 149, 66, 0.5); }
+
+    .hdiv-purpose {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: clamp(0.68rem, 1vw, 0.8rem);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text);
+      opacity: 0.75;
+      margin-top: 0.9rem;
+    }
+
+    .hdiv-desc {
+      display: block;
+      font-family: var(--font-body);
+      font-size: clamp(0.78rem, 1.2vw, 0.88rem);
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-top: 0.7rem;
+    }
+
+    .hdiv-pricing {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      color: var(--accent-bright);
+      margin-top: 0.7rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--border);
+      opacity: 0.85;
+    }
+
+    @media (max-width: 720px) {
+      /* Stacked compact rows on mobile */
+      .hero-divisions { grid-template-columns: 1fr; gap: 0; }
+      .hdiv {
+        padding: 0.7rem 1.2rem;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      .hdiv:last-child { border-bottom: none; }
+      .hdiv-canvas { display: none; }
+      .hdiv::before, .hdiv::after { display: none; }
+      .hdiv-content {
+        display: flex;
+        align-items: baseline;
+        gap: 0.7rem;
+        flex-wrap: wrap;
+      }
+      .hdiv:hover .hdiv-content { transform: none; }
+      .hdiv-name { font-size: 1.6rem; }
+      .hdiv-purpose { margin-top: 0; font-size: 0.55rem; }
+      .hdiv-desc {
+        display: none;
+      }
+      .hdiv-pricing { display: none; }
+      /* Shrink hero to fit everything above fold */
+      #hero { min-height: auto; }
+      .hero-top {
+        padding-top: clamp(2.5rem, 5vh, 4rem) !important;
+        padding-bottom: clamp(1rem, 2vh, 1.5rem) !important;
+      }
+      .hero-eyebrow { margin-bottom: 0.6rem; font-size: 0.5rem; }
+      .hero-wordmark { font-size: clamp(2rem, 11vw, 3.5rem); }
+      .hero-secondary { font-size: clamp(0.9rem, 3vw, 1.2rem); margin-top: 0.4rem; }
+      .hero-cta { margin-top: 1.2rem; padding: 0.7rem 1.8rem; font-size: 0.6rem; }
+      /* Spacing between hero sections on mobile */
+      .divisions-head { padding-top: 1.2rem; padding-bottom: 0.3rem; border-top: 1px solid var(--border); }
+      .hero-divisions { padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
+      #flywheel { padding-top: 2rem; }
+
+      /* Compact portfolio on mobile — list rows, no thumbnails */
+      .work-grid { grid-template-columns: 1fr !important; gap: 0 !important; border: none !important; }
+      .work-card {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.8rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .work-card:last-child { border-bottom: none; }
+      .card-thumb { display: none; }
+      .card-body {
+        padding: 0.7rem 0.3rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.3rem 0.8rem;
+      }
+      .card-type { font-size: 0.5rem; }
+      .card-title { font-size: clamp(0.85rem, 3vw, 1rem); }
+      .card-client, .card-year { font-size: 0.6rem; }
+
+      /* Flywheel — tight side-by-side on mobile */
+      #flywheel .wrap { padding-left: 1.2rem; padding-right: 1.2rem; }
+      .fw-diagram { padding: 0; overflow: visible; }
+      .fw-node { width: 90px; padding: 0.55rem 0.3rem; }
+      .fw-node-name { font-size: 1.1rem; }
+      .fw-node-sub { font-size: 0.4rem; letter-spacing: 0.1em; margin-top: 0.25rem; }
+      .fw-arrow-down { height: 2rem; }
+      .fw-bottom-row { gap: 0; }
+      .fw-connector { padding-top: 1rem; }
+      .fw-plus-line { gap: 0.2rem; }
+      .fw-h-line { width: 1rem; }
+      .fw-plus { font-size: 0.9rem; }
+      .fw-combo-note { font-size: 0.38rem; letter-spacing: 0.08em; }
+    }
+
+    /* =========================================
+       PORTFOLIO / WORK
+       ========================================= */
+    #work {
+      padding: clamp(5rem, 10vh, 9rem) 0;
+      background: var(--surface);
+      background-image: radial-gradient(ellipse at 30% 0%, rgba(196, 87, 26, 0.02) 0%, transparent 50%);
+    }
+
+    .work-head { margin-bottom: clamp(3rem, 6vh, 5rem); }
+    .work-head h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-top: 1rem;
+    }
+
+    .work-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    @media (max-width: 860px) { .work-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .work-grid { grid-template-columns: 1fr; } }
+
+    .work-card {
+      background: var(--bg);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.3s, transform 0.4s var(--ease-out), box-shadow 0.4s;
+    }
+    .work-card:hover {
+      background: var(--surface-raised);
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(196, 87, 26, 0.1);
+    }
+    .work-card:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    .card-thumb {
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+      position: relative;
+      background: var(--surface);
+    }
+    .card-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      opacity: 0.85;
+      transition: transform 0.5s var(--ease-out), opacity 0.3s;
+    }
+    .work-card:hover .card-thumb img { transform: scale(1.04); opacity: 1; }
+
+    .card-placeholder {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card-placeholder-num {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 300;
+      color: var(--text-dim);
+      letter-spacing: -0.04em;
+      user-select: none;
+    }
+
+    .card-body {
+      padding: 1.1rem 1.3rem 1.5rem;
+      display: flex; flex-direction: column; gap: 0.25rem; flex: 1;
+    }
+    .card-type {
+      font-family: var(--font-mono);
+      font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--accent);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+    }
+    .card-title {
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 1.7vw, 1.4rem);
+      font-weight: 400; letter-spacing: -0.01em; line-height: 1.2;
+      color: var(--text); margin-top: 0.25rem;
+    }
+    .card-client {
+      font-family: var(--font-mono);
+      font-size: 0.7rem; color: var(--text-muted);
+    }
+    .card-year {
+      font-family: var(--font-mono);
+      font-size: 0.62rem; color: var(--text-dim);
+      margin-top: auto; padding-top: 0.6rem;
+    }
+
+    /* ---- Work Modal ---- */
+    #work-modal {
+      position: fixed; inset: 0; z-index: 9000;
+      background: rgba(7, 6, 4, 0.92);
+      display: flex; align-items: center; justify-content: center;
+      padding: clamp(1rem, 4vw, 3rem);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s var(--ease-out);
+    }
+    #work-modal.open { opacity: 1; pointer-events: all; }
+
+    .modal-inner {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      max-width: 880px; width: 100%;
+      max-height: 92vh; overflow: hidden;
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      transform: translateY(18px);
+      transition: transform 0.35s var(--ease-out);
+    }
+    #work-modal.open .modal-inner { transform: translateY(0); }
+    @media (max-width: 640px) {
+      .modal-inner {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+        max-width: calc(100vw - 2rem);
+        margin: 0 auto;
+      }
+      .modal-media { order: 2; max-height: 200px; }
+      .modal-details { order: 1; }
+    }
+
+    .modal-media {
+      position: relative;
+      background: var(--bg);
+      overflow: hidden;
+    }
+    .modal-media img, .modal-media video, .modal-media iframe {
+      width: 100%; height: 100%; object-fit: cover; display: block; border: none;
+    }
+    .modal-placeholder {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 0.6rem;
+    }
+    .modal-placeholder-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .modal-placeholder-icon {
+      font-size: 1.8rem; color: var(--text-dim); opacity: 0.4; user-select: none;
+    }
+
+    .modal-details {
+      padding: clamp(1.5rem, 3vw, 2.4rem);
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+    .modal-type {
+      font-family: var(--font-mono);
+      font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 0.75rem;
+    }
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 2.5vw, 2rem);
+      font-weight: 300; letter-spacing: -0.02em; line-height: 1.15;
+      color: var(--text); margin-bottom: 0.6rem;
+    }
+    .modal-meta-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      flex-wrap: wrap; margin-bottom: 1.1rem;
+    }
+    .modal-client {
+      font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);
+    }
+    .modal-year {
+      font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim);
+      border: 1px solid var(--border); padding: 0.12rem 0.45rem;
+    }
+    .modal-tags {
+      display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1.3rem;
+    }
+    .modal-tag {
+      font-family: var(--font-mono); font-size: 0.58rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-muted); border: 1px solid var(--border);
+      padding: 0.18rem 0.5rem;
+    }
+    .modal-desc {
+      font-family: var(--font-mono);
+      font-size: clamp(0.78rem, 1.2vw, 0.86rem);
+      line-height: 1.82; color: var(--text); flex: 1;
+    }
+    .modal-ext-link {
+      display: inline-block; margin-top: 1.4rem;
+      font-family: var(--font-mono); font-size: 0.68rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--accent); text-decoration: none;
+      border-bottom: 1px solid var(--border-accent); padding-bottom: 2px;
+      transition: color 0.2s, border-color 0.2s; width: fit-content;
+    }
+    .modal-ext-link:hover { color: var(--accent-bright); border-color: var(--accent-bright); }
+    .modal-ext-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+    /* Gallery in work modal */
+    .modal-gallery {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .modal-gallery-item {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      position: relative;
+    }
+    .modal-gallery-item img,
+    .modal-gallery-item video,
+    .modal-gallery-item iframe {
+      width: 100%; height: 100%; object-fit: cover; display: block; border: none;
+    }
+    .modal-gallery-item iframe { aspect-ratio: 16/9; height: auto; }
+    .modal-gallery-dots {
+      display: flex; justify-content: center; gap: 6px;
+      padding: 0.6rem 0;
+      background: var(--bg);
+    }
+    .modal-gallery-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--text-dim);
+      border: none; cursor: pointer; padding: 0;
+      transition: background 0.2s;
+    }
+    .modal-gallery-dot.active { background: var(--accent-bright); }
+
+    .modal-close {
+      position: absolute; top: 0; right: 0;
+      width: 3rem; height: 3rem;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 1.2rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s, background 0.2s; z-index: 10;
+    }
+    .modal-close:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .modal-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* =========================================
+       DIVISION MODAL
+       ========================================= */
+    #div-modal {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 9000;
+      background: rgba(7, 6, 4, 0.92);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s var(--ease-out);
+    }
+    #div-modal.open { opacity: 1; pointer-events: all; }
+
+    .dmod-inner {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      max-width: 360px;
+      position: fixed;
+      top: 50%;
+      left: 1rem; right: 1rem;
+      margin: 0 auto;
+      padding: 1.5rem;
+      overflow: hidden;
+      transform: translateY(calc(-50% + 18px));
+      transition: transform 0.35s var(--ease-out);
+      z-index: 9001;
+    }
+    #div-modal.open .dmod-inner { transform: translateY(-50%); }
+
+    .dmod-header { margin-bottom: 1.2rem; }
+    .dmod-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text); opacity: 0.75; display: block; margin-bottom: 0.5rem;
+    }
+    .dmod-name {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 8vw, 3rem);
+      font-weight: 300; letter-spacing: -0.04em; line-height: 0.9;
+      color: var(--text);
+    }
+    .dmod-name.orange-1 { color: #b85a1a; }
+    .dmod-name.orange-2 { color: #df6824; }
+    .dmod-name.orange-3 { color: #f59542; }
+    .dmod-tagline {
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      margin-top: 0.6rem; line-height: 1.55;
+    }
+
+    /* Compact pricing rows */
+    .dmod-prices { margin-bottom: 1.2rem; }
+    .dmod-price-row {
+      padding: 0.6rem 0;
+      border-top: 1px solid var(--border);
+    }
+    .dmod-price-row:last-child { border-bottom: 1px solid var(--border); }
+    .dmod-price-name {
+      font-family: var(--font-mono);
+      font-size: 0.68rem; color: var(--text-muted);
+      display: block; margin-bottom: 0.15rem;
+    }
+    .dmod-price-amount {
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 3.5vw, 1.25rem);
+      font-weight: 300; color: var(--text);
+    }
+    .dmod-price-note {
+      font-family: var(--font-mono);
+      font-size: 0.58rem; color: var(--text-dim);
+      margin-top: 0.1rem; display: block;
+    }
+
+    .dmod-cta {
+      display: block; width: 100%; text-align: center;
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      border: 1px solid var(--border-accent);
+      color: var(--accent-bright);
+      font-family: var(--font-mono); font-size: 0.62rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .dmod-cta:hover { border-color: var(--accent-bright); color: var(--text); background: var(--accent-glow); }
+    .dmod-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+    /* =========================================
+       FLYWHEEL — how the three divisions connect
+       ========================================= */
+    #flywheel {
+      padding: clamp(4rem, 8vh, 7rem) 0;
+      background: #f0ebe3;
+      color: #1a1812;
+    }
+
+    .flywheel-head {
+      text-align: center;
+      margin-bottom: clamp(2.5rem, 5vh, 4.5rem);
+    }
+    #flywheel .label { color: var(--accent); }
+    .flywheel-head h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: #1a1812;
+      margin-top: 0.6rem;
+    }
+
+    /* The diagram */
+    .fw-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1rem;
+      gap: 0;
+      margin-bottom: clamp(3rem, 6vh, 5rem);
+    }
+
+    .fw-top-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .fw-node {
+      background: #fff;
+      border: 1px solid rgba(26, 24, 18, 0.12);
+      padding: clamp(0.8rem, 2vw, 1.4rem) clamp(1rem, 3vw, 2.2rem);
+      text-align: center;
+      width: clamp(120px, 22vw, 180px);
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .fw-node:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 20px rgba(196, 87, 26, 0.1);
+    }
+    .fw-node-name {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+      font-weight: 300;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: #b85a1a;
+      display: block;
+    }
+    .fw-node-name.accent { color: #df6824; }
+    .fw-node[data-fw="fuel"] .fw-node-name { color: #f59542; }
+    .fw-node-sub {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(26, 24, 18, 0.45);
+      display: block;
+      margin-top: 0.4rem;
+    }
+
+    .fw-arrow-down {
+      width: 1px;
+      height: 4.5rem;
+      background: repeating-linear-gradient(to bottom, var(--accent) 0px, var(--accent) 3px, transparent 3px, transparent 7px);
+      background-size: 1px 7px;
+      animation: dashFlow 1.2s linear infinite;
+      position: relative;
+      flex-shrink: 0;
+    }
+    @keyframes dashFlow {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 14px; }
+    }
+    .fw-arrow-down::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 50%;
+      transform: translateX(-50%);
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid #c4571a;
+    }
+
+    .fw-bottom-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+    }
+
+    .fw-bottom-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .fw-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 1.8rem; /* aligns with node center */
+    }
+
+    .fw-plus-line {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .fw-h-line {
+      width: 2.5rem;
+      height: 1px;
+      background: repeating-linear-gradient(to right, var(--accent) 0px, var(--accent) 3px, transparent 3px, transparent 7px);
+      background-size: 7px 1px;
+    }
+    /* Forge side → flows right toward + */
+    .fw-h-line:first-child {
+      animation: dashFlowRight 1.2s linear infinite;
+    }
+    /* Fuel side → flows left toward + */
+    .fw-h-line:last-child {
+      animation: dashFlowLeft 1.2s linear infinite;
+    }
+    @keyframes dashFlowRight {
+      0% { background-position: 0 0; }
+      100% { background-position: 14px 0; }
+    }
+    @keyframes dashFlowLeft {
+      0% { background-position: 0 0; }
+      100% { background-position: -14px 0; }
+    }
+    .fw-plus {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 300;
+      color: var(--accent);
+      letter-spacing: 0;
+      line-height: 1;
+    }
+
+    .fw-combo-note {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(26, 24, 18, 0.4);
+      color: rgba(238,232,220,0.3);
+      margin-top: 0.6rem;
+      white-space: nowrap;
+    }
+
+    /* Path selector */
+    .path-selector {
+      max-width: 680px;
+      margin: 0 auto;
+      border-top: 1px solid rgba(26, 24, 18, 0.1);
+      padding-top: clamp(2rem, 4vh, 3.5rem);
+    }
+    .path-q {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 2vw, 1.4rem);
+      font-weight: 300;
+      color: #1a1812;
+      text-align: center;
+      margin-bottom: 1.4rem;
+    }
+    .path-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    @media (max-width: 500px) { .path-options { grid-template-columns: 1fr; } }
+
+    .path-btn {
+      background: #fff;
+      border: 1px solid rgba(26, 24, 18, 0.12);
+      color: rgba(26, 24, 18, 0.6);
+      font-family: var(--font-mono);
+      font-size: clamp(0.68rem, 1.1vw, 0.76rem);
+      letter-spacing: 0.06em;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      border-radius: 0;
+    }
+    .path-btn:hover { border-color: var(--accent); color: #1a1812; background: rgba(196,87,26,0.04); }
+    .path-btn.active { border-color: var(--accent); color: #1a1812; background: rgba(196,87,26,0.08); }
+    .path-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    .path-result {
+      margin-top: 1.8rem;
+      min-height: 4rem;
+    }
+    .path-answer {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1.4rem 1.6rem;
+      background: #fff;
+      border: 1px solid rgba(26, 24, 18, 0.12);
+      animation: fadeUp 0.35s var(--ease-out) forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .path-answer-label {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: var(--accent-bright);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .path-answer-text {
+      font-family: var(--font-mono);
+      font-size: clamp(0.75rem, 1.1vw, 0.82rem);
+      line-height: 1.75;
+      color: rgba(26, 24, 18, 0.65);
+    }
+    .path-answer-cta {
+      display: inline-block;
+      margin-top: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .path-answer-cta:hover { color: #1a1812; border-color: #1a1812; }
+
+    /* =========================================
+       ORIGIN
+       ========================================= */
+    #origin {
+      padding: clamp(4rem, 8vh, 6rem) 0;
+      background: #f0ebe3;
+      color: #1a1812;
+    }
+    #origin .label { color: var(--accent); }
+    .origin-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: clamp(2rem, 4vw, 3.5rem);
+      align-items: center;
+    }
+    @media (max-width: 720px) {
+      .origin-layout { grid-template-columns: 1fr; }
+    }
+    .origin-media {
+      aspect-ratio: 4/3;
+      background: #fff;
+      border: 1px solid rgba(26, 24, 18, 0.1);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .origin-placeholder {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .origin-placeholder span { color: rgba(26, 24, 18, 0.25) !important; }
+    .origin-content { }
+    .origin-content .label { margin-bottom: 1rem; }
+
+    .origin-label { margin-bottom: 2rem; }
+
+    .origin-text {
+      font-family: var(--font-mono);
+      font-size: clamp(0.82rem, 1.5vw, 0.95rem);
+      font-weight: 300;
+      line-height: 1.75;
+      color: rgba(26, 24, 18, 0.75);
+      max-width: 780px;
+      border-left: 2px solid var(--accent);
+      padding-left: clamp(1.5rem, 3vw, 2.5rem);
+    }
+    .origin-text p + p { margin-top: 1em; }
+    .origin-text strong {
+      font-style: normal;
+      font-weight: 600;
+      color: var(--accent-bright);
+    }
+
+    /* =========================================
+       INTAKE FORM
+       ========================================= */
+    #intake { padding: clamp(5rem, 10vh, 9rem) 0; }
+
+    .intake-head { margin-bottom: 1.5rem; text-align: center; }
+    .intake-head h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .intake-sub {
+      font-family: var(--font-body);
+      font-size: clamp(0.78rem, 1.2vw, 0.88rem);
+      color: var(--text-muted);
+      margin-top: 0.6rem;
+      line-height: 1.6;
+    }
+
+    /* Progress bar */
+    .intake-progress {
+      width: 100%; max-width: 560px;
+      height: 2px;
+      background: var(--border-mid);
+      margin: 0 auto clamp(2rem, 4vh, 3rem);
+    }
+    .intake-progress-fill {
+      height: 100%;
+      background: var(--accent-bright);
+      transition: width 0.6s var(--ease-out);
+    }
+
+    .intake-shell { max-width: 560px; margin: 0 auto; }
+
+    /* Steps */
+    .step { display: none; }
+    .step.active { display: block; }
+
+    .step-num {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.25em;
+      color: var(--accent-bright);
+      margin-bottom: 1.2rem;
+    }
+
+    /* Step 1 */
+    .step1-label {
+      font-family: var(--font-mono);
+      font-size: clamp(0.78rem, 1.2vw, 0.88rem);
+      color: var(--text);
+      display: block;
+      margin-bottom: 1rem;
+      line-height: 1.55;
+    }
+
+    .intake-textarea {
+      width: 100%;
+      min-height: 90px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-weight: 300;
+      font-size: clamp(0.82rem, 1.3vw, 0.9rem);
+      line-height: 1.75;
+      padding: 1rem 1.2rem;
+      resize: none;
+      outline: none;
+      transition: border-color 0.25s;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
+    .intake-textarea::placeholder { color: var(--text-dim); }
+    .intake-textarea:focus { border-color: var(--accent); }
+    .intake-textarea:focus-visible { outline: none; }
+
+    .intake-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.75rem;
+    }
+
+    .word-ct {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--text);
+      letter-spacing: 0.05em;
+      transition: color 0.3s;
+    }
+    .word-ct.counting { color: #e8e846; }
+    .word-ct.ready { color: #4ade80; }
+
+    .arrow-btn {
+      background: none;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 1.2rem;
+      line-height: 1;
+      width: 2.8rem; height: 2.8rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.25s, border-color 0.25s, background 0.25s;
+    }
+    .arrow-btn.ready { color: #4ade80; border-color: #4ade80; }
+    .arrow-btn.ready:hover { background: rgba(74, 222, 128, 0.08); }
+    .arrow-btn:disabled { cursor: not-allowed; }
+    .arrow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+    .step1-err {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent);
+      margin-top: 0.5rem;
+      min-height: 1.2em;
+    }
+
+    /* Step 2 — questions */
+    .loading-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      padding: 0.5rem 0;
+    }
+    .dots { display: flex; gap: 5px; }
+    .dot {
+      width: 4px; height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%, 60%, 100% { opacity: 0.15; transform: scale(0.8); }
+      30% { opacity: 1; transform: scale(1); }
+    }
+
+    .q-block {
+      margin-bottom: 2rem;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+    }
+    .q-block.in { opacity: 1; transform: translateY(0); }
+
+    .q-num {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.25em;
+      color: var(--accent-bright);
+      margin-bottom: 0.8rem;
+    }
+
+    .q-text {
+      font-family: var(--font-mono);
+      font-size: clamp(0.82rem, 1.3vw, 0.92rem);
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+
+    .q-options { display: flex; flex-direction: column; gap: 0.45rem; }
+
+    .opt-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-weight: 300;
+      font-size: clamp(0.75rem, 1.2vw, 0.82rem);
+      line-height: 1.5;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      border-radius: 0;
+    }
+    .opt-btn:hover { border-color: var(--accent); color: var(--text); }
+    .opt-btn.sel { border-color: var(--accent); color: var(--text); background: var(--accent-glow); }
+    .opt-btn:disabled { cursor: default; }
+    .opt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .opt-btn.suggested {
+      border-color: var(--accent);
+      position: relative;
+      animation: suggestPulse 2s ease-in-out infinite;
+    }
+    .opt-btn.suggested::after {
+      content: 'suggested';
+      position: absolute;
+      top: -0.45rem; right: 0.8rem;
+      font-family: var(--font-mono);
+      font-size: 0.45rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-bright);
+      background: var(--bg);
+      padding: 0 0.4rem;
+    }
+    @keyframes suggestPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(196, 87, 26, 0); }
+      50% { box-shadow: 0 0 12px 2px rgba(196, 87, 26, 0.15); }
+    }
+
+    /* Step 3 — result */
+    .summary-wrap {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+    }
+    .summary-wrap.in { opacity: 1; transform: translateY(0); }
+
+    .result-card {
+      text-align: center;
+      padding: clamp(2rem, 4vw, 3rem) 0;
+    }
+    .result-eyebrow {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+    .result-route {
+      margin-bottom: 1.5rem;
+    }
+    .result-route-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.5rem;
+    }
+    .result-route-name {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 7vw, 4rem);
+      font-weight: 300;
+      letter-spacing: -0.03em;
+      color: var(--accent-bright);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .result-route-name:hover { color: var(--text); }
+    .result-divider {
+      width: 40px; height: 1px;
+      background: var(--accent);
+      margin: 0 auto 1.5rem;
+    }
+    .result-next {
+      font-family: var(--font-body);
+      font-size: clamp(0.78rem, 1.2vw, 0.88rem);
+      color: var(--text-muted);
+      max-width: 380px;
+      margin: 0 auto 1.5rem;
+      line-height: 1.65;
+    }
+    .result-cta {
+      display: inline-block;
+      padding: 0.9rem 2.8rem;
+      background: var(--accent);
+      border: none;
+      color: var(--bg);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+    }
+    .result-cta:hover { background: var(--accent-bright); }
+    .result-cta:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 4px; }
+    .result-or {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      margin-top: 1rem;
+    }
+    .result-or a { color: var(--text-muted); text-decoration: none; }
+    .result-or a:hover { color: var(--accent-bright); }
+
+    /* Contact fields */
+    .contact-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+    .intake-field {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 300;
+      outline: none;
+      transition: border-color 0.25s;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
+    .intake-field::placeholder { color: var(--text-dim); }
+    .intake-field:focus { border-color: var(--accent); }
+
+    /* Reset button */
+    .reset-btn {
+      display: none;
+      margin: 2rem auto 0;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.5rem 1.2rem;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .reset-btn.visible { display: block; }
+    .reset-btn:hover { color: var(--text-muted); border-color: var(--text-dim); }
+
+    /* =========================================
+       NEWSLETTER
+       ========================================= */
+    #newsletter {
+      padding: clamp(4rem, 8vh, 6rem) 0;
+      text-align: center;
+    }
+    #newsletter h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin-top: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+    #newsletter p {
+      font-family: var(--font-body);
+      font-size: clamp(0.78rem, 1.2vw, 0.88rem);
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+    .newsletter-form {
+      display: flex;
+      max-width: 420px;
+      margin: 0 auto;
+      gap: 0;
+    }
+    .newsletter-input {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      border-right: none;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      outline: none;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
+    .newsletter-input::placeholder { color: var(--text-dim); }
+    .newsletter-input:focus { border-color: var(--accent); }
+    .newsletter-btn {
+      padding: 0.8rem 1.5rem;
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      color: var(--bg);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+      border-radius: 0;
+    }
+    .newsletter-btn:hover { background: var(--accent-bright); }
+    .newsletter-status {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--accent-bright);
+      margin-top: 0.8rem;
+      min-height: 1.2em;
+    }
+    .newsletter-posts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      max-width: 720px;
+      margin: 0 auto 2rem;
+      text-align: left;
+    }
+    .nl-post {
+      background: var(--bg);
+      padding: 1.2rem;
+      cursor: pointer;
+      transition: background 0.3s;
+      text-decoration: none;
+      display: block;
+    }
+    .nl-post:hover { background: var(--surface-raised); }
+    .nl-post-date {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.4rem;
+    }
+    .nl-post-title {
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 0.3rem;
+    }
+    .nl-post-preview {
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* =========================================
+       FOOTER
+       ========================================= */
+    footer {
+      padding: clamp(2rem, 4vh, 3.5rem) 0;
+      border-top: 1px solid var(--border);
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+    }
+    .footer-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .footer-domain {
+      font-family: var(--font-display);
+      font-size: clamp(0.85rem, 1.4vw, 1rem);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-domain:hover { color: var(--accent-bright); }
+    .footer-email {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-email:hover { color: var(--text); }
+    .footer-social {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .footer-social a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.2rem;
+      height: 2.2rem;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .footer-social a:hover { color: var(--text); border-color: var(--border-mid); }
+    .footer-social a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .footer-social svg { width: 0.9rem; height: 0.9rem; fill: currentColor; }
+    .footer-copy {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    @media (max-width: 560px) {
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* =========================================
+       RESPONSIVE TWEAKS
+       ========================================= */
+    @media (max-width: 480px) {
+      .intake-textarea { min-height: 90px; }
+    }
+
+    /* =========================================
+       REDUCED MOTION
+       ========================================= */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      .q-block, .summary-wrap {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      .dot { animation: none; opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Splash screen -->
+<div id="splash" aria-hidden="true">
+  <canvas id="splash-canvas"></canvas>
+  <div class="splash-text">BURNPILES</div>
+</div>
+
+<main>
+
+  <!-- ============================================================
+       HERO — brand statement top, three divisions bottom
+       ============================================================ -->
+  <section id="hero" aria-labelledby="hero-title">
+
+    <div class="wrap hero-top">
+      <p class="hero-eyebrow">Burn the noise. Keep the signal.</p>
+      <h1 class="hero-wordmark" id="hero-title">Burnpiles</h1>
+      <a href="#intake" class="hero-cta">What are you trying to build? →</a>
+    </div>
+
+    <!-- Three ember panels — always side by side, plain divs (no button quirks) -->
+    <div class="divisions-head">
+      <span class="label">Our Services</span>
+    </div>
+    <div class="hero-divisions" aria-label="How we work">
+
+      <div class="hdiv" data-div="flint">
+        <canvas class="hdiv-canvas" aria-hidden="true"></canvas>
+        <div class="hdiv-content">
+          <span class="hdiv-name orange-1">Flint</span>
+          <span class="hdiv-purpose">Ideation</span>
+          <span class="hdiv-desc">We train you. We discuss blockers. You walk away like Tony Stark.</span>
+          <span class="hdiv-pricing">1-Day, Virtual, $5,000</span>
+        </div>
+      </div>
+
+      <div class="hdiv" data-div="forge">
+        <canvas class="hdiv-canvas" aria-hidden="true"></canvas>
+        <div class="hdiv-content">
+          <span class="hdiv-name orange-2">Forge</span>
+          <span class="hdiv-purpose">Prototype</span>
+          <span class="hdiv-desc">We build a prototype based on your needs. Includes 1x ideation sync and a prototype within 5 business days.</span>
+          <span class="hdiv-pricing">Custom Quote, starts at $25,000</span>
+        </div>
+      </div>
+
+      <div class="hdiv" data-div="fuel">
+        <canvas class="hdiv-canvas" aria-hidden="true"></canvas>
+        <div class="hdiv-content">
+          <span class="hdiv-name orange-3">Fuel</span>
+          <span class="hdiv-purpose">Resourcing</span>
+          <span class="hdiv-desc">You have your idea and maybe a prototype, but you need a team. We build the team for you.</span>
+          <span class="hdiv-pricing">Custom Quote</span>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       FLYWHEEL — how the three divisions connect
+       ============================================================ -->
+  <section id="flywheel" aria-label="How we work together">
+    <div class="wrap">
+
+      <div class="flywheel-head reveal">
+        <span class="label">The model</span>
+        <h2>Most clients start with Flint.<br>Then go to Forge, Fuel, or both.</h2>
+      </div>
+
+      <div class="fw-diagram reveal d1">
+        <!-- Top node: Flint -->
+        <div class="fw-top-node">
+          <div class="fw-node" data-fw="flint" role="button" tabindex="0" aria-label="Learn about Flint">
+            <span class="fw-node-name">Flint</span>
+            <span class="fw-node-sub">Ideation</span>
+          </div>
+          <div class="fw-arrow-down"></div>
+        </div>
+
+        <!-- Bottom row: Forge + connector + Fuel -->
+        <div class="fw-bottom-row">
+          <div class="fw-bottom-node">
+            <div class="fw-node" data-fw="forge" role="button" tabindex="0" aria-label="Learn about Forge">
+              <span class="fw-node-name accent">Forge</span>
+              <span class="fw-node-sub">Prototype</span>
+            </div>
+          </div>
+
+          <div class="fw-connector">
+            <div class="fw-plus-line">
+              <div class="fw-h-line"></div>
+              <span class="fw-plus">+</span>
+              <div class="fw-h-line"></div>
+            </div>
+            <span class="fw-combo-note">can combine</span>
+          </div>
+
+          <div class="fw-bottom-node">
+            <div class="fw-node" data-fw="fuel" role="button" tabindex="0" aria-label="Learn about Fuel">
+              <span class="fw-node-name">Fuel</span>
+              <span class="fw-node-sub">Resourcing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Path selector -->
+      <div class="path-selector reveal d2">
+        <p class="path-q">What do you need?</p>
+        <div class="path-options" role="group" aria-label="Select your need">
+          <button class="path-btn" data-path="flint">Help figuring out what to build</button>
+          <button class="path-btn" data-path="forge">Someone to build it for us</button>
+          <button class="path-btn" data-path="fuel">Specialists to join our team</button>
+          <button class="path-btn" data-path="both">Build it + bring us people</button>
+        </div>
+        <div class="path-result" id="path-result" aria-live="polite"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============================================================
+       PORTFOLIO / WORK
+       ============================================================ -->
+  <section id="work" aria-labelledby="work-title">
+    <div class="wrap">
+      <div class="work-head reveal">
+        <span class="label">Selected work</span>
+        <h2 id="work-title">Some of what we've built.</h2>
+      </div>
+      <div class="work-grid" id="work-grid" role="list" aria-label="Portfolio"></div>
+    </div>
+  </section>
+
+  <!-- Division modal -->
+  <div id="div-modal" role="dialog" aria-modal="true" aria-labelledby="dmod-name-text" aria-hidden="true">
+    <div class="dmod-inner" id="dmod-inner">
+      <button class="modal-close" id="dmod-close" aria-label="Close">&#x2715;</button>
+      <div class="dmod-header">
+        <span class="dmod-label" id="dmod-label"></span>
+        <h2 class="dmod-name" id="dmod-name-text"></h2>
+        <p class="dmod-tagline" id="dmod-tagline"></p>
+      </div>
+      <div class="dmod-prices" id="dmod-prices"></div>
+      <button class="dmod-cta" id="dmod-cta">What are you trying to build? →</button>
+    </div>
+  </div>
+
+  <!-- Work modal -->
+  <div id="work-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-text" aria-hidden="true">
+    <div class="modal-inner" id="modal-inner">
+      <button class="modal-close" id="modal-close" aria-label="Close">&#x2715;</button>
+      <div class="modal-media" id="modal-media"></div>
+      <div class="modal-details">
+        <p class="modal-type" id="modal-type"></p>
+        <h2 class="modal-title" id="modal-title-text"></h2>
+        <div class="modal-meta-row">
+          <span class="modal-client" id="modal-client"></span>
+          <span class="modal-year"   id="modal-year"></span>
+        </div>
+        <div class="modal-tags" id="modal-tags"></div>
+        <p class="modal-desc" id="modal-desc"></p>
+        <a class="modal-ext-link" id="modal-ext-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none">View project →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <!-- ============================================================
+       INTAKE FORM
+       ============================================================ -->
+  <section id="intake" aria-labelledby="intake-title">
+    <div class="wrap">
+      <div class="intake-head reveal">
+        <h2 id="intake-title">What are you trying to build?</h2>
+        <p class="intake-sub"><span style="color:var(--accent-bright)">Tell us about you and answer 3 questions.</span><br>Then we'll find the signal.</p>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="intake-progress" id="intake-progress">
+        <div class="intake-progress-fill" id="intake-progress-fill" style="width: 33%"></div>
+      </div>
+
+      <div class="intake-shell" role="region" aria-live="polite" aria-label="Intake conversation">
+
+        <!-- Step 0: Contact info -->
+        <div class="step active" id="step-0">
+          <span class="step-num">01</span>
+          <p class="step1-label">First, who are you?</p>
+          <div class="contact-fields">
+            <input type="text" id="intake-name" class="intake-field" placeholder="Your name" required>
+            <input type="text" id="intake-company" class="intake-field" placeholder="Company" required>
+            <input type="email" id="intake-email" class="intake-field" placeholder="Email" required>
+          </div>
+          <div class="intake-row">
+            <span></span>
+            <button class="arrow-btn" id="contact-btn" type="button" disabled aria-label="Continue">→</button>
+          </div>
+        </div>
+
+        <!-- Step 1: Text input -->
+        <div class="step" id="step-1">
+          <span class="step-num">02</span>
+          <label for="intake-input" class="step1-label">What are you trying to build, fix, or figure out?</label>
+          <textarea
+            id="intake-input"
+            class="intake-textarea"
+            placeholder="We need to build a prototype for a new product, and we're not sure where to start..."
+            rows="3"
+            aria-describedby="word-display"
+          ></textarea>
+          <div class="intake-row">
+            <span class="word-ct" id="word-display" aria-live="polite">keep going →</span>
+            <button class="arrow-btn" id="go-btn" type="button" disabled aria-label="Continue">→</button>
+          </div>
+          <div class="step1-err" id="step1-err" role="alert" aria-live="assertive"></div>
+        </div>
+
+        <!-- Step 2: Questions -->
+        <div class="step" id="step-2">
+          <div class="loading-row" id="loading-row">
+            <div class="dots" aria-hidden="true">
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+            <span>Thinking…</span>
+          </div>
+          <div id="q-container"></div>
+        </div>
+
+        <!-- Step 3: Result -->
+        <div class="step" id="step-3">
+          <div class="summary-wrap" id="summary-wrap">
+            <div class="result-card" id="result-card">
+              <span class="result-eyebrow">Based on what you told us</span>
+              <div class="result-route" id="result-route">
+                <span class="result-route-label">We'd start with</span>
+                <button class="result-route-name" id="route-badge-name" aria-label="Learn about this division"></button>
+              </div>
+              <div class="result-divider"></div>
+              <p class="result-next">The next step is a 30-minute call. No deck, no prep — just a real conversation about what you need.</p>
+              <a
+                href="https://calendly.com/burnpiles/intro"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="result-cta"
+                id="result-calendly"
+              >Book a call →</a>
+              <p class="result-or">or email <a href="mailto:hey@burnpiles.com">hey@burnpiles.com</a></p>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /intake-shell -->
+      <button class="reset-btn" id="reset-btn">Start over ↺</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================================
+     ORIGIN STORY
+     ============================================================ -->
+<section id="origin" aria-labelledby="origin-title">
+  <div class="wrap">
+    <div class="origin-layout reveal">
+      <div class="origin-media">
+        <div class="origin-placeholder">
+          <span style="font-family:var(--font-display);font-size:2rem">◼</span>
+          <span style="font-family:var(--font-mono);font-size:0.6rem;margin-top:0.4rem">Photo placeholder</span>
+        </div>
+      </div>
+      <div class="origin-content">
+        <span class="label" id="origin-title">Where the name comes from</span>
+        <blockquote class="origin-text">
+          <p>Ed Turner was a farmer in Idaho. At the back of his property was a <strong>burn pile</strong> — for brush, deadwood, and ideas. Sketches, half-plans, things he'd been carrying. When he was done with something, he'd walk it out to the pile.</p>
+          <p>He wasn't destroying them. He was releasing them. The signal had already been captured. Everything else was noise.</p>
+          <p>Burnpiles is named for that pile.</p>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     NEWSLETTER
+     ============================================================ -->
+<section id="newsletter" class="reveal">
+  <div class="wrap--narrow">
+    <span class="label">Stay in the loop</span>
+    <h2>The Burnpiles Newsletter</h2>
+    <p>Signal, not noise. Delivered occasionally.</p>
+    <div class="newsletter-posts" id="newsletter-posts" style="display:none"></div>
+    <form class="newsletter-form" id="newsletter-form" action="https://burnpiles.beehiiv.com/subscribe" method="GET" target="_blank">
+      <input type="email" name="email" class="newsletter-input" placeholder="you@company.com" required>
+      <button type="submit" class="newsletter-btn">Subscribe</button>
+    </form>
+    <p class="newsletter-status" id="newsletter-status"></p>
+  </div>
+</section>
+
+<div class="rule"></div>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <a href="https://www.burnpiles.com" class="footer-domain">www.burnpiles.com</a>
+        <a href="mailto:hey@burnpiles.com" class="footer-email">hey@burnpiles.com</a>
+      </div>
+      <div class="footer-social">
+        <!-- Instagram -->
+        <a href="https://instagram.com/burnpiles" target="_blank" rel="noopener noreferrer" aria-label="Burnpiles on Instagram">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+          </svg>
+        </a>
+        <!-- X / Twitter -->
+        <a href="https://x.com/burnpiles" target="_blank" rel="noopener noreferrer" aria-label="Burnpiles on X">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+        <!-- LinkedIn -->
+        <a href="https://linkedin.com/company/burnpiles" target="_blank" rel="noopener noreferrer" aria-label="Burnpiles on LinkedIn">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+        </a>
+      </div>
+      <span class="footer-copy">© 2026 Burnpiles</span>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+  /* ============================================================
+     ANTHROPIC API KEY
+     Inject window.ANTHROPIC_API_KEY via a Cloudflare Pages Function
+     or a <script> tag served before this file. Without it the intake
+     form runs in demo mode.
+     ============================================================ */
+  const API_KEY = () => (typeof window !== 'undefined' && window.ANTHROPIC_API_KEY) || '';
+
+  /* ============================================================
+     ADMIN OVERRIDES — load from localStorage (set by admin.html)
+     ============================================================ */
+  (function applyAdminOverrides() {
+    let cfg;
+    try { cfg = JSON.parse(localStorage.getItem('bp_admin') || 'null'); } catch(e) {}
+    if (!cfg) return;
+
+    // Calendly URL
+    if (cfg.calendlyUrl) {
+      const btn = document.querySelector('.calendly-btn');
+      if (btn) btn.href = cfg.calendlyUrl;
+    }
+
+    // Contact email
+    if (cfg.email) {
+      document.querySelectorAll('a[href^="mailto:"]').forEach(a => {
+        a.href = 'mailto:' + cfg.email;
+        a.textContent = cfg.email;
+      });
+    }
+
+    // Social links
+    if (cfg.social) {
+      const links = document.querySelectorAll('.footer-social a');
+      links.forEach(a => {
+        const label = a.getAttribute('aria-label') || '';
+        if (label.includes('Instagram') && cfg.social.instagram) a.href = cfg.social.instagram;
+        if (label.includes('LinkedIn')  && cfg.social.linkedin)  a.href = cfg.social.linkedin;
+        if (label.includes(' X')        && cfg.social.x)         a.href = cfg.social.x;
+      });
+    }
+
+    // Origin story image
+    if (cfg.originImage) {
+      const originMedia = document.querySelector('.origin-media');
+      if (originMedia) {
+        originMedia.innerHTML = `<img src="${cfg.originImage}" alt="Where the name comes from" style="width:100%;height:100%;object-fit:cover;display:block">`;
+      }
+    }
+
+    // Projects — replace PROJECTS array before renderPortfolio runs
+    if (Array.isArray(cfg.projects) && cfg.projects.length) {
+      window._adminProjects = cfg.projects;
+    }
+
+    // Beehiiv — fetch latest posts
+    if (cfg.beehiivApiKey && cfg.beehiivPubId) {
+      fetch(`https://api.beehiiv.com/v2/publications/${cfg.beehiivPubId}/posts?limit=3&status=confirmed&order_by=publish_date&direction=desc`, {
+        headers: { 'Authorization': `Bearer ${cfg.beehiivApiKey}` }
+      })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => {
+        const posts = data.data || [];
+        if (!posts.length) return;
+        const container = document.getElementById('newsletter-posts');
+        container.innerHTML = posts.map(p => {
+          const date = p.publish_date ? new Date(p.publish_date * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+          const preview = p.subtitle || p.preview_text || '';
+          return `<a class="nl-post" href="${p.web_url || '#'}" target="_blank" rel="noopener noreferrer">
+            <div class="nl-post-date">${date}</div>
+            <div class="nl-post-title">${p.title || 'Untitled'}</div>
+            ${preview ? `<div class="nl-post-preview">${preview}</div>` : ''}
+          </a>`;
+        }).join('');
+        container.style.display = 'grid';
+      })
+      .catch(err => console.warn('Beehiiv fetch failed:', err));
+    }
+  })();
+
+  /* ============================================================
+     EMBER CANVAS SYSTEMS — one per division card
+     ============================================================ */
+  class EmberSystem {
+    constructor(canvas, { count, speedMult, glowColor, glowMid, coreColor, oscAmp, flameHeight, flameIntensity }) {
+      this.canvas    = canvas;
+      this.ctx       = canvas.getContext('2d');
+      this.count     = count;
+      this.speedMult = speedMult;
+      this.glowColor = glowColor;
+      this.glowMid   = glowMid;
+      this.coreColor = coreColor;
+      this.oscAmp    = oscAmp;
+      this.flameHeight    = flameHeight || 0;    // 0–1, portion of canvas height
+      this.flameIntensity = flameIntensity || 0;  // 0–1, glow opacity
+      this.W = 0; this.H = 0;
+      this.embers = [];
+      this.time = 0;
+      this.init();
+    }
+
+    resize() {
+      this.W = this.canvas.width  = this.canvas.offsetWidth;
+      this.H = this.canvas.height = this.canvas.offsetHeight;
+    }
+
+    spawn(scattered) {
+      const { W, H, speedMult, oscAmp } = this;
+      return {
+        x:    Math.random() * W,
+        y:    scattered ? Math.random() * H : H + 10 + Math.random() * 20,
+        r:    Math.random() * 1.5 + 0.4,
+        vy:   -(Math.random() * 0.55 + 0.2) * speedMult,
+        vx:   (Math.random() - 0.5) * 0.25,
+        osc:  Math.random() * Math.PI * 2,
+        oSpd: Math.random() * 0.025 + 0.008,
+        oscAmp,
+        alp:  Math.random() * 0.55 + 0.2,
+        life: 0,
+        max:  Math.random() * 240 + 100,
+        curAlp: 0,
+      };
+    }
+
+    init() {
+      this.resize();
+      this.embers = Array.from({ length: this.count }, () => {
+        const e = this.spawn(true);
+        e.life = Math.random() * e.max; // stagger initial positions
+        return e;
+      });
+    }
+
+    stepEmber(e) {
+      e.osc  += e.oSpd;
+      e.y    += e.vy;
+      e.x    += e.vx + Math.sin(e.osc) * e.oscAmp;
+      e.life++;
+      e.curAlp = e.alp * (1 - Math.pow(e.life / e.max, 1.8));
+      if (e.life >= e.max || e.y < -8) Object.assign(e, this.spawn(false));
+    }
+
+    drawEmber(e) {
+      const { ctx, glowColor, glowMid, coreColor } = this;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, e.curAlp);
+      const g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r * 3.5);
+      g.addColorStop(0,   glowColor);
+      g.addColorStop(0.4, glowMid);
+      g.addColorStop(1,   'rgba(180, 50, 8, 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r * 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = coreColor;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    tick() {
+      const { ctx, W, H } = this;
+      ctx.clearRect(0, 0, W, H);
+
+      // Draw fire glow from bottom — layered ambient heat
+      if (this.flameHeight > 0 && this.flameIntensity > 0) {
+        this.time += 0.015;
+        const fH = H * this.flameHeight;
+        const intensity = this.flameIntensity;
+
+        // Layer 1: deep base heat — wide, warm, barely visible
+        const g1 = ctx.createLinearGradient(0, H, 0, H - fH);
+        g1.addColorStop(0,    `rgba(140, 40, 5, ${0.22 * intensity})`);
+        g1.addColorStop(0.35, `rgba(120, 30, 3, ${0.08 * intensity})`);
+        g1.addColorStop(1,    'rgba(100, 20, 2, 0)');
+        ctx.fillStyle = g1;
+        ctx.fillRect(0, H - fH, W, fH);
+
+        // Layer 2: mid glow — oscillates height slowly
+        const midH = fH * (0.55 + 0.12 * Math.sin(this.time * 0.8));
+        const g2 = ctx.createLinearGradient(0, H, 0, H - midH);
+        g2.addColorStop(0,    `rgba(190, 65, 10, ${0.18 * intensity})`);
+        g2.addColorStop(0.3,  `rgba(170, 50, 8, ${0.1 * intensity})`);
+        g2.addColorStop(1,    'rgba(150, 40, 5, 0)');
+        ctx.fillStyle = g2;
+        ctx.fillRect(0, H - midH, W, midH);
+
+        // Layer 3: hot spots — scattered radial glows along bottom edge
+        for (let i = 0; i < 8; i++) {
+          const seed = i * 7.31;
+          const cx = W * ((i + 0.5) / 8) + Math.sin(this.time * 0.6 + seed) * (W * 0.03);
+          const cy = H - fH * 0.05;
+          const spotR = fH * (0.25 + 0.15 * Math.sin(this.time * (0.5 + i * 0.13) + seed));
+          const spotAlpha = (0.08 + 0.05 * Math.sin(this.time * (0.7 + i * 0.1) + seed)) * intensity;
+
+          const g3 = ctx.createRadialGradient(cx, cy, 0, cx, cy, spotR);
+          g3.addColorStop(0,   `rgba(220, 90, 15, ${spotAlpha})`);
+          g3.addColorStop(0.5, `rgba(180, 55, 8, ${spotAlpha * 0.4})`);
+          g3.addColorStop(1,   'rgba(150, 40, 5, 0)');
+          ctx.fillStyle = g3;
+          ctx.fillRect(cx - spotR, cy - spotR, spotR * 2, spotR * 2);
+        }
+
+        // Layer 4: bright ember line at very bottom edge
+        const g4 = ctx.createLinearGradient(0, H, 0, H - 8);
+        g4.addColorStop(0,   `rgba(240, 120, 30, ${0.15 * intensity})`);
+        g4.addColorStop(1,   'rgba(200, 70, 10, 0)');
+        ctx.fillStyle = g4;
+        ctx.fillRect(0, H - 8, W, 8);
+      }
+
+      this.embers.forEach(e => { this.stepEmber(e); this.drawEmber(e); });
+    }
+  }
+
+  // ---- Instantiate one ember system per hero division panel ----
+  const emberSystems = [
+    new EmberSystem(document.querySelector('[data-div="flint"] .hdiv-canvas'), {
+      count: 150, speedMult: 0.6,
+      glowColor: 'rgba(210, 95, 18, 0.75)',
+      glowMid:   'rgba(175, 50, 8, 0.3)',
+      coreColor: 'rgba(240, 170, 70, 0.95)',
+      oscAmp: 0.18,
+      flameHeight: 0.2,
+      flameIntensity: 0.4,
+    }),
+    new EmberSystem(document.querySelector('[data-div="forge"] .hdiv-canvas'), {
+      count: 200, speedMult: 1.0,
+      glowColor: 'rgba(235, 95, 18, 0.8)',
+      glowMid:   'rgba(210, 70, 12, 0.35)',
+      coreColor: 'rgba(255, 210, 100, 0.95)',
+      oscAmp: 0.25,
+      flameHeight: 0.245,
+      flameIntensity: 0.49,
+    }),
+    new EmberSystem(document.querySelector('[data-div="fuel"] .hdiv-canvas'), {
+      count: 500, speedMult: 1.6,
+      glowColor: 'rgba(240, 100, 20, 0.9)',
+      glowMid:   'rgba(220, 75, 15, 0.45)',
+      coreColor: 'rgba(255, 220, 110, 1)',
+      oscAmp: 0.5,
+      flameHeight: 0.35,
+      flameIntensity: 0.7,
+    }),
+  ];
+
+  // ---- Single shared rAF loop ----
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!prefersReducedMotion) {
+    (function emberLoop() {
+      emberSystems.forEach(s => s.tick());
+      requestAnimationFrame(emberLoop);
+    }());
+  }
+
+  // ---- Resize handler ----
+  let emberResizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(emberResizeTimer);
+    emberResizeTimer = setTimeout(() => emberSystems.forEach(s => s.resize()), 120);
+  });
+
+  /* ============================================================
+     DIVISION MODALS — Flint / Forge / Fuel
+     ============================================================ */
+  const DIVISIONS = {
+    flint: {
+      label: 'Ideation',
+      name: 'Flint',
+      nameAccent: false,
+      tagline: 'We train you. We discuss blockers. You walk away like Tony Stark.',
+      about: "Flint is a focused ideation session. You bring the questions, the blockers, the half-formed ideas — we pressure-test them together. You leave with clarity and direction. No deck required, no homework ahead of time.",
+      services: [
+        'Strategy & ideation sessions',
+        'Technology evaluation & feasibility',
+        'Concept validation & pressure-testing',
+        'Workshops & team training',
+      ],
+      pricing: [
+        { name: 'Virtual (1 day)', amount: '$5,000', note: 'remote · full working session' },
+        { name: 'In-Person', amount: '$5,000 + travel', note: 'flight, accommodations & per diem required' },
+      ],
+    },
+    forge: {
+      label: 'Prototype',
+      name: 'Forge',
+      nameAccent: true,
+      tagline: 'We build a prototype based on your needs. Includes 1x ideation sync — prototype within 5 business days.',
+      about: "Forge is the build arm. You tell us what you need, we sync once to align, then we go build it. You get a working prototype — not a pitch deck, not a wireframe. Something real you can show, test, and iterate on.",
+      services: [
+        'Rapid prototyping (5 business days)',
+        'Product & experience builds',
+        'Interactive systems & tools',
+        'Full production builds (scoped)',
+      ],
+      pricing: [
+        { name: 'Prototype', amount: 'Starts at $25,000', note: 'includes 1x Flint sync · 5 business day delivery' },
+        { name: 'Production Build', amount: 'Custom Quote', note: 'scoped after prototype or discovery' },
+      ],
+    },
+    fuel: {
+      label: 'Resourcing',
+      name: 'Fuel',
+      nameAccent: false,
+      tagline: 'You have your idea and maybe a prototype, but you need a team. We build the team for you.',
+      about: "Fuel is talent. You have the direction and the management bandwidth — you just need the right people. We source, vet, and place specialists directly into your team. You run the work. We find the people.",
+      services: [
+        'Specialist placement (contract & permanent)',
+        'Project team assembly',
+        'Technical leadership matching',
+        'Vendor & partner curation',
+      ],
+      pricing: [
+        { name: 'Talent Placement', amount: 'Custom Quote', note: 'scoped per role and engagement type' },
+      ],
+    },
+  };
+
+  const divModal     = document.getElementById('div-modal');
+  const dmodClose    = document.getElementById('dmod-close');
+  const dmodCta      = document.getElementById('dmod-cta');
+  let divLastFocus   = null;
+
+  function openDivModal(divKey) {
+    const d = DIVISIONS[divKey];
+    if (!d) return;
+    divLastFocus = document.activeElement;
+
+    document.getElementById('dmod-label').textContent     = d.label;
+    const nameEl = document.getElementById('dmod-name-text');
+    nameEl.textContent = d.name;
+    // Match card orange tiers: flint=1, forge=2, fuel=3
+    const orangeMap = { flint: 'orange-1', forge: 'orange-2', fuel: 'orange-3' };
+    nameEl.className = 'dmod-name ' + (orangeMap[divKey] || '');
+    document.getElementById('dmod-tagline').textContent   = d.tagline;
+
+    document.getElementById('dmod-prices').innerHTML = d.pricing
+      .map(p => `
+        <div class="dmod-price-row">
+          <span class="dmod-price-name">${p.name}</span>
+          <span class="dmod-price-amount">${p.amount}</span>
+          <span class="dmod-price-note">${p.note}</span>
+        </div>`).join('');
+
+    divModal.classList.add('open');
+    divModal.removeAttribute('aria-hidden');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => dmodClose.focus(), 60);
+  }
+
+  function closeDivModal() {
+    divModal.classList.remove('open');
+    divModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (divLastFocus) divLastFocus.focus();
+  }
+
+  document.querySelectorAll('.hdiv').forEach(el => {
+    el.addEventListener('click', e => {
+      openDivModal(el.dataset.div);
+    });
+  });
+
+  dmodClose.addEventListener('click', closeDivModal);
+  divModal.addEventListener('click', e => { if (e.target === divModal) closeDivModal(); });
+  dmodCta.addEventListener('click', () => {
+    closeDivModal();
+    document.getElementById('intake').scrollIntoView({ behavior: 'smooth' });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && divModal.classList.contains('open')) closeDivModal();
+  });
+
+  /* ============================================================
+     FLYWHEEL — node clicks open division modal; path selector
+     ============================================================ */
+  document.querySelectorAll('.fw-node[data-fw]').forEach(node => {
+    const activate = () => openDivModal(node.dataset.fw);
+    node.addEventListener('click', activate);
+    node.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
+  });
+
+  const PATH_ANSWERS = {
+    flint: {
+      label: 'Flint',
+      text: 'Start with a strategy sprint. We\'ll help you clarify what to build, what to cut, and why — before any money goes toward execution.',
+    },
+    forge: {
+      label: 'Forge',
+      text: 'Hand us the brief. Forge builds it end-to-end — prototype through production. You stay out of the weeds; we own the process and deliver the thing.',
+    },
+    fuel: {
+      label: 'Fuel',
+      text: 'We source and place the right specialist — an AI engineer, XR developer, or technical lead — directly into your team. You direct the work. We handle finding and vetting the person. Two weeks to someone in the room.',
+    },
+    both: {
+      label: 'Forge + Fuel',
+      text: 'Forge prototypes and builds the core product. Fuel sources specialists who embed alongside. One brief, two tracks — useful when you need agency execution and dedicated headcount running in parallel.',
+    },
+  };
+
+  const pathResult = document.getElementById('path-result');
+  document.querySelectorAll('.path-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.path-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const ans = PATH_ANSWERS[btn.dataset.path];
+      if (!ans) return;
+      pathResult.innerHTML = `
+        <div class="path-answer">
+          <span class="path-answer-label">${ans.label}</span>
+          <p class="path-answer-text">${ans.text}</p>
+          <a href="#intake" class="path-answer-cta">What are you trying to build? →</a>
+        </div>`;
+    });
+  });
+
+  /* ============================================================
+     PORTFOLIO DATA + MODAL
+     ============================================================
+
+     TO ADD A PROJECT:
+     Copy a block in PROJECTS, fill in the fields, and reload.
+     - thumb:       path to a thumbnail image (leave '' for placeholder)
+     - media.kind:  'image' | 'video' | 'none'
+     - media.src:   image path OR YouTube/Vimeo embed URL
+     - link:        optional external URL (leave '' to hide)
+     ============================================================ */
+  const PROJECTS = [
+    {
+      id: 'p01',
+      title: 'AI Literacy at Scale',
+      client: 'Global Financial Services Firm',
+      year: '2024',
+      type: 'Strategy & Experience Design',
+      tags: ['Enterprise', 'AI', 'Flint'],
+      thumbBg: '#181310',
+      desc: 'A three-part internal AI literacy experience for 12,000 employees across 40 countries. Replaced a planned town hall with interactive workshops, honest documentation, and a clear vocabulary — not a verdict. Internal AI tool adoption improved measurably in the following quarter.',
+      thumb: '',
+      media: { kind: 'image', src: '' },
+      link: '',
+    },
+    {
+      id: 'p02',
+      title: 'Interactive Narrative Prototypes',
+      client: 'Streaming Production Company',
+      year: '2023',
+      type: 'Studio / Rapid Prototyping',
+      tags: ['Media', 'Interactive', 'Forge'],
+      thumbBg: '#100c08',
+      desc: 'Six weeks embedded with a streaming development team. Built two interactive narrative prototypes under real production conditions. Delivered go/no-go findings before full budgets were committed. One project launched. One didn\'t. Both were the right call.',
+      thumb: '',
+      media: { kind: 'image', src: '' },
+      link: '',
+    },
+    {
+      id: 'p03',
+      title: 'AI Curriculum Architecture',
+      client: 'University System',
+      year: '2023',
+      type: 'Curriculum Design + Training',
+      tags: ['Education', 'AI', 'Flint'],
+      thumbBg: '#0c1014',
+      desc: 'Rebuilt a professional development curriculum around AI literacy for faculty and staff. Designed the program architecture, onboarded the right tools, and trained internal champions to run it independently. Expanded to three additional colleges after handover. No retainer.',
+      thumb: '',
+      media: { kind: 'image', src: '' },
+      link: '',
+    },
+    {
+      id: 'p04',
+      title: 'Real-Time AI Main Stage Visuals',
+      client: 'Major Music Festival',
+      year: '2024',
+      type: 'Live Events + Technical Production',
+      tags: ['Live Events', 'AI', 'Forge'],
+      thumbBg: '#120e06',
+      desc: 'Scoped, staffed, and built a real-time AI visual system responsive to the live audio feed — in three weeks, for a main-stage outdoor audience. Full dress rehearsal 36 hours before doors opened. Worked on night one. Worked better on night two.',
+      thumb: '',
+      media: { kind: 'video', src: '' },
+      link: '',
+    },
+    {
+      id: 'p05',
+      title: 'XR Safety Training Environment',
+      client: 'Fortune 500 Manufacturer',
+      year: '2023',
+      type: 'XR Experience Design',
+      tags: ['Enterprise', 'XR', 'Forge'],
+      thumbBg: '#0a100d',
+      desc: 'Designed and built an XR-based training environment for high-risk manufacturing procedures. Replaced a 3-day in-person certification program with a repeatable, scalable spatial experience that workers could run on-shift, on demand.',
+      thumb: '',
+      media: { kind: 'image', src: '' },
+      link: '',
+    },
+    {
+      id: 'p06',
+      title: 'AI Workflow Integration',
+      client: 'Mid-Size Creative Agency',
+      year: '2024',
+      type: 'Advisory & Talent',
+      tags: ['Agency', 'AI', 'Fuel'],
+      thumbBg: '#110b0a',
+      desc: 'Six-month advisory engagement helping a mid-size creative agency identify, pilot, and integrate AI tools across their production workflow. Included two specialized talent introductions that became full-time placements.',
+      thumb: '',
+      media: { kind: 'image', src: '' },
+      link: '',
+    },
+  ];
+
+  // ---- Render portfolio grid ----
+  (function renderPortfolio() {
+    const grid = document.getElementById('work-grid');
+    if (!grid) return;
+    const activeProjects = window._adminProjects || PROJECTS;
+    activeProjects.forEach((p, i) => {
+      const card = document.createElement('article');
+      card.className = 'work-card';
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', p.title + ' — ' + p.client);
+
+      const thumbHTML = p.thumb
+        ? `<img src="${p.thumb}" alt="${esc(p.title)}" loading="lazy">`
+        : `<div class="card-placeholder" style="background:${p.thumbBg}">
+             <span class="card-placeholder-num">0${i + 1}</span>
+           </div>`;
+
+      card.innerHTML = `
+        <div class="card-thumb">${thumbHTML}</div>
+        <div class="card-body">
+          <span class="card-type">${esc(p.type)}</span>
+          <h3 class="card-title">${esc(p.title)}</h3>
+          <p class="card-client">${esc(p.client)}</p>
+          <span class="card-year">${esc(p.year)}</span>
+        </div>`;
+
+      card.addEventListener('click', () => openWorkModal(p));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWorkModal(p); }
+      });
+      grid.appendChild(card);
+    });
+  }());
+
+  // ---- Modal ----
+  const wModal   = document.getElementById('work-modal');
+  const mClose   = document.getElementById('modal-close');
+  const mMedia   = document.getElementById('modal-media');
+  const mType    = document.getElementById('modal-type');
+  const mTitleEl = document.getElementById('modal-title-text');
+  const mClient  = document.getElementById('modal-client');
+  const mYear    = document.getElementById('modal-year');
+  const mTags    = document.getElementById('modal-tags');
+  const mDesc    = document.getElementById('modal-desc');
+  const mExtLink = document.getElementById('modal-ext-link');
+  let   lastFocus = null;
+
+  function openWorkModal(p) {
+    lastFocus = document.activeElement;
+
+    // Media area — supports gallery or single media
+    mMedia.innerHTML = '';
+    const gallery = p.media.gallery && p.media.gallery.length > 0 ? p.media.gallery : null;
+
+    if (gallery) {
+      // Render scrollable gallery
+      const wrap = document.createElement('div');
+      wrap.className = 'modal-gallery';
+      gallery.forEach((item, gi) => {
+        const slide = document.createElement('div');
+        slide.className = 'modal-gallery-item';
+        if (item.kind === 'video' && item.src) {
+          const ifr = document.createElement('iframe');
+          ifr.src = item.src;
+          ifr.setAttribute('allow', 'autoplay; fullscreen');
+          ifr.setAttribute('allowfullscreen', '');
+          ifr.style.aspectRatio = '16/9';
+          slide.appendChild(ifr);
+        } else if (item.src) {
+          const img = document.createElement('img');
+          img.src = item.src; img.alt = p.title + ' ' + (gi + 1);
+          slide.appendChild(img);
+        }
+        wrap.appendChild(slide);
+      });
+      mMedia.appendChild(wrap);
+      // Dot indicators
+      if (gallery.length > 1) {
+        const dots = document.createElement('div');
+        dots.className = 'modal-gallery-dots';
+        gallery.forEach((_, di) => {
+          const dot = document.createElement('button');
+          dot.className = 'modal-gallery-dot' + (di === 0 ? ' active' : '');
+          dot.setAttribute('aria-label', 'Slide ' + (di + 1));
+          dot.onclick = () => {
+            wrap.children[di].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+            dots.querySelectorAll('.modal-gallery-dot').forEach((d, i) => d.classList.toggle('active', i === di));
+          };
+          dots.appendChild(dot);
+        });
+        mMedia.appendChild(dots);
+        // Update dots on scroll
+        wrap.addEventListener('scroll', () => {
+          const idx = Math.round(wrap.scrollLeft / wrap.offsetWidth);
+          dots.querySelectorAll('.modal-gallery-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+        });
+      }
+    } else if (p.media.kind === 'image' && p.media.src) {
+      const img = document.createElement('img');
+      img.src = p.media.src; img.alt = p.title;
+      mMedia.appendChild(img);
+    } else if (p.media.kind === 'video' && p.media.src) {
+      const ifr = document.createElement('iframe');
+      ifr.src = p.media.src;
+      ifr.setAttribute('allow', 'autoplay; fullscreen');
+      ifr.setAttribute('allowfullscreen', '');
+      ifr.style.aspectRatio = '16/9';
+      mMedia.appendChild(ifr);
+    } else {
+      mMedia.innerHTML = `
+        <div class="modal-placeholder" style="background:${p.thumbBg}">
+          <span class="modal-placeholder-icon">◼</span>
+          <span class="modal-placeholder-label">Add media via admin panel</span>
+        </div>`;
+    }
+
+    // Text fields
+    mType.textContent    = p.type;
+    mTitleEl.textContent = p.title;
+    mClient.textContent  = p.client;
+    mYear.textContent    = p.year;
+    mDesc.textContent    = p.desc;
+    mTags.innerHTML = p.tags.map(t => `<span class="modal-tag">${esc(t)}</span>`).join('');
+
+    if (p.link) {
+      mExtLink.href         = p.link;
+      mExtLink.style.display = 'inline-block';
+    } else {
+      mExtLink.style.display = 'none';
+    }
+
+    wModal.classList.add('open');
+    wModal.removeAttribute('aria-hidden');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => mClose.focus(), 60);
+  }
+
+  function closeWorkModal() {
+    wModal.classList.remove('open');
+    wModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocus) lastFocus.focus();
+  }
+
+  mClose.addEventListener('click', closeWorkModal);
+  wModal.addEventListener('click', e => { if (e.target === wModal) closeWorkModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && wModal.classList.contains('open')) closeWorkModal();
+  });
+
+  /* ============================================================
+     SCROLL REVEAL
+     ============================================================ */
+  const ro = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        ro.unobserve(e.target);
+      }
+    }),
+    { threshold: 0.08, rootMargin: '0px 0px -50px 0px' }
+  );
+  document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+  document.querySelectorAll('.hdiv').forEach(el => ro.observe(el));
+
+  /* ---- Hero parallax ---- */
+  const heroTop = document.querySelector('.hero-top');
+  if (heroTop && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const y = window.scrollY;
+          if (y < window.innerHeight) {
+            heroTop.style.transform = `translateY(${y * 0.25}px)`;
+            heroTop.style.opacity = Math.max(0, 1 - y / (window.innerHeight * 0.7));
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+
+  /* ============================================================
+     INTAKE FORM
+     ============================================================ */
+  const textarea    = document.getElementById('intake-input');
+  const wordDisp    = document.getElementById('word-display');
+  const goBtn       = document.getElementById('go-btn');
+  const step1Err    = document.getElementById('step1-err');
+  const contactBtn  = document.getElementById('contact-btn');
+  const nameInput   = document.getElementById('intake-name');
+  const compInput   = document.getElementById('intake-company');
+  const emailInput  = document.getElementById('intake-email');
+  const resetBtn    = document.getElementById('reset-btn');
+
+  let userName = '', userCompany = '', userEmail = '';
+  let userText       = '';
+  let qs             = [];
+  let picks          = [];
+  let suggestedRoute = '';
+  let routeSignals   = '';
+
+  /* ---- Step 0: Contact info ---- */
+  function checkContactFields() {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const valid = nameInput.value.trim() && emailInput.value.trim() && emailRegex.test(emailInput.value.trim());
+    if (valid) { contactBtn.classList.add('ready'); contactBtn.disabled = false; }
+    else { contactBtn.classList.remove('ready'); contactBtn.disabled = true; }
+  }
+  [nameInput, compInput, emailInput].forEach(f => f.addEventListener('input', checkContactFields));
+
+  contactBtn.addEventListener('click', () => {
+    userName    = nameInput.value.trim();
+    userCompany = compInput.value.trim();
+    userEmail   = emailInput.value.trim();
+    showStep('step-1');
+  });
+
+  /* ---- Reset button ---- */
+  resetBtn.addEventListener('click', () => {
+    userText = ''; qs = []; picks = []; suggestedRoute = ''; routeSignals = '';
+    textarea.value = '';
+    nameInput.value = ''; compInput.value = ''; emailInput.value = '';
+    wordDisp.textContent = 'keep going →';
+    wordDisp.classList.remove('ready', 'counting');
+    goBtn.classList.remove('ready'); goBtn.disabled = true;
+    contactBtn.classList.remove('ready'); contactBtn.disabled = true;
+    document.getElementById('q-container').innerHTML = '';
+    document.getElementById('loading-row').style.display = 'flex';
+    showStep('step-0');
+  });
+
+  function wordCount(s) {
+    return s.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(s));
+    return d.innerHTML;
+  }
+
+  function showStep(id) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    // Update progress bar (4 steps: 0→25%, 1→50%, 2→75%, 3→100%)
+    const fill = document.getElementById('intake-progress-fill');
+    if (id === 'step-0') fill.style.width = '25%';
+    else if (id === 'step-1') fill.style.width = '50%';
+    else if (id === 'step-2') fill.style.width = '75%';
+    else if (id === 'step-3') fill.style.width = '100%';
+    // Show reset button after step 0
+    const rb = document.getElementById('reset-btn');
+    if (id === 'step-0') rb.classList.remove('visible');
+    else rb.classList.add('visible');
+  }
+
+  /* Word count feedback */
+  textarea.addEventListener('input', () => {
+    const n = wordCount(textarea.value);
+    const needed = 5;
+    wordDisp.classList.remove('ready', 'counting');
+    if (n === 0) {
+      wordDisp.textContent = 'keep going →';
+    } else if (n < needed) {
+      const left = needed - n;
+      wordDisp.textContent = `${left} more word${left !== 1 ? 's' : ''} to go`;
+      wordDisp.classList.add('counting');
+    } else {
+      wordDisp.textContent = 'ready →';
+      wordDisp.classList.add('ready');
+    }
+    if (n >= needed) {
+      goBtn.classList.add('ready');
+      goBtn.disabled = false;
+      goBtn.setAttribute('aria-label', 'Continue');
+    } else {
+      goBtn.classList.remove('ready');
+      goBtn.disabled = true;
+      goBtn.setAttribute('aria-label', `Continue — ${needed - n} more word${needed - n !== 1 ? 's' : ''} needed`);
+    }
+  });
+
+  /* Ctrl+Enter shortcut */
+  textarea.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.ctrlKey && !goBtn.disabled) {
+      e.preventDefault();
+      goBtn.click();
+    }
+  });
+
+  /* Advance to step 2 */
+  goBtn.addEventListener('click', async () => {
+    if (goBtn.disabled) return;
+    userText = textarea.value.trim();
+    step1Err.textContent = '';
+    await runStep2();
+  });
+
+  async function runStep2() {
+    showStep('step-2');
+    const loadingRow = document.getElementById('loading-row');
+    const qContainer = document.getElementById('q-container');
+    loadingRow.style.display = 'flex';
+    qContainer.innerHTML = '';
+
+    try {
+      qs = await fetchQuestions(userText);
+      loadingRow.style.display = 'none';
+      renderQuestion(0);
+    } catch (err) {
+      loadingRow.style.display = 'none';
+      qContainer.innerHTML = `
+        <p style="font-family:var(--font-mono);font-size:0.82rem;color:var(--accent);">
+          Something went wrong —
+          <button onclick="showStep('step-1')" style="background:none;border:none;color:var(--accent);font-family:var(--font-mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;">go back and try again</button>
+        </p>`;
+      console.error('Intake error:', err);
+    }
+  }
+
+  /* ---- API: Generate questions + suggested route ---- */
+  async function fetchQuestions(input) {
+    const key = API_KEY();
+
+    if (!key) {
+      // Demo mode — keyword sniff to pick the right example set
+      const low = input.toLowerCase();
+      const buildSignals = /\b(build|prototype|develop|ship|product|app|tool|mvp|launch|create)\b/.test(low);
+      const hireSignals  = /\b(hire|team|talent|developers|headcount|staff|resource|contractor|engineers)\b/.test(low);
+
+      if (buildSignals && hireSignals) {
+        suggestedRoute = 'Forge + Fuel';
+        routeSignals   = 'Build + hire signals — you want to ship something and staff up simultaneously';
+        return [
+          {
+            question: "Who's managing the actual day-to-day build work?",
+            options: [
+              "We'd want an outside team to own it — we just want it delivered",
+              "We have internal leadership but need specialists embedded in our team",
+              "Honestly not sure yet — depends on what makes sense"
+            ],
+            recommended: 0
+          },
+          {
+            question: "What's the timeline pressure like?",
+            options: [
+              "We need something working in 4–6 weeks",
+              "We have a 3–6 month runway and want to staff up properly",
+              "No hard deadline — we want to get it right"
+            ],
+            recommended: 0
+          }
+        ];
+      } else if (hireSignals) {
+        suggestedRoute = 'Fuel';
+        routeSignals   = 'Hire/talent signals — you need people placed in your team, not a build partner';
+        return [
+          {
+            question: 'What kind of person are you looking for?',
+            options: [
+              "An engineer who can actually build, not just advise",
+              "A creative or design-engineering hybrid",
+              "A technical lead or fractional CTO who can set direction"
+            ],
+            recommended: 0
+          },
+          {
+            question: 'How long do you need them?',
+            options: [
+              "3–6 months, project-based contract",
+              "Long-term — this is a permanent or near-permanent role",
+              "Not sure yet, want to see how it goes"
+            ],
+            recommended: 0
+          }
+        ];
+      } else if (buildSignals) {
+        suggestedRoute = 'Forge';
+        routeSignals   = 'Build/prototype signals — you have something to ship';
+        return [
+          {
+            question: 'Do you have a clear brief, or are you still figuring out exactly what to build?',
+            options: [
+              "Pretty clear — I know what I want, I need people to build it",
+              "Roughly clear, but I'd want pressure-testing before we start",
+              "Still fuzzy — the problem is clear but the solution isn't"
+            ],
+            recommended: 0
+          },
+          {
+            question: 'What does a win look like in 6 weeks?',
+            options: [
+              "A working prototype I can show to stakeholders or investors",
+              "A production-ready v1 deployed to real users",
+              "A clear decision on what to build and how to scope it"
+            ],
+            recommended: 0
+          }
+        ];
+      } else {
+        suggestedRoute = 'Flint';
+        routeSignals   = 'Strategy/direction signals — direction before execution';
+        return [
+          {
+            question: 'Where are you actually stuck right now?',
+            options: [
+              "I know something needs to change, but I can't articulate what yet",
+              "I have a direction but I'm not confident it's the right one",
+              "I need to convince internal stakeholders — I need the clarity first"
+            ],
+            recommended: 0
+          },
+          {
+            question: 'What would make this conversation worth having?',
+            options: [
+              "A clear point of view on what technology fits our situation",
+              "A roadmap I can actually act on in the next quarter",
+              "Someone who can challenge our current thinking honestly"
+            ],
+            recommended: 0
+          }
+        ];
+      }
+    }
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 900,
+        system: `You are an intake specialist for Burnpiles — a creative technology studio with three divisions:\n\n- FLINT (Ideation): Helps clients figure out what to build and why. Strategy, direction, workshops, technology evaluation. Best when the brief is unclear or the decision is still being made.\n- FORGE (Prototype & Build): Burnpiles owns the build end-to-end. Prototypes, AI tools, XR experiences, production systems. The client brings the brief; Forge delivers the thing.\n- FUEL (Talent Resourcing): Burnpiles sources and places specialist talent — AI engineers, XR developers, creative technologists — directly into the client's team. The client manages the work; Fuel finds the people.\n\nA potential client has described what they're working on. Do these things:\n1. Based on their description, identify the most likely division fit: "Flint", "Forge", "Fuel", "Forge + Fuel", or "Flint + Forge".\n2. Write 2 sharp, specific, human-sounding questions (3 options each) that CONFIRM or DISAMBIGUATE the fit. Do not re-ask what they already told you. Do not name the divisions.\n3. For each question, indicate which option (0, 1, or 2) best matches what the person described. This will be shown as a subtle "suggested" highlight.\n4. Return ONLY valid JSON:\n{\n  "suggestedRoute": "Forge",\n  "routeReason": "one plain sentence explaining why",\n  "questions": [\n    { "question": "...", "options": ["...", "...", "..."], "recommended": 0 },\n    { "question": "...", "options": ["...", "...", "..."], "recommended": 1 }\n  ]\n}\nOptions must be first-person sentences a real person would say. Be specific to what they wrote.`,
+        messages: [
+          { role: 'user', content: `They wrote: "${input}"\n\nGenerate routing assessment and two triage questions.` }
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API ${res.status}`);
+    }
+
+    const data = await res.json();
+    const text = data.content[0].text.trim();
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('Bad response format');
+    const parsed = JSON.parse(match[0]);
+    if (!Array.isArray(parsed.questions) || parsed.questions.length < 2) throw new Error('Unexpected shape');
+    // Store the suggested route + reason for step 3
+    if (parsed.suggestedRoute) suggestedRoute = parsed.suggestedRoute;
+    if (parsed.routeReason)    routeSignals   = parsed.routeReason;
+    return parsed.questions.slice(0, 2);
+  }
+
+  /* ---- Render a question ---- */
+  function renderQuestion(idx) {
+    const container = document.getElementById('q-container');
+    const q = qs[idx];
+
+    const block = document.createElement('div');
+    block.className = 'q-block';
+    block.id = `q-${idx}`;
+    block.innerHTML = `
+      <span class="q-num">0${idx + 3}</span>
+      <p class="q-text">${esc(q.question)}</p>
+      <div class="q-options" role="group" aria-label="${esc(q.question)}">
+        ${q.options.map((opt, i) => `
+          <button
+            class="opt-btn${q.recommended === i ? ' suggested' : ''}"
+            type="button"
+            data-idx="${idx}"
+            data-pick="${i}"
+            data-val="${esc(opt)}"
+          >${esc(opt)}</button>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(block);
+
+    requestAnimationFrame(() => requestAnimationFrame(() => block.classList.add('in')));
+
+    block.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Highlight selection and lock
+        block.querySelectorAll('.opt-btn').forEach(b => {
+          b.classList.remove('sel');
+          b.disabled = true;
+        });
+        btn.classList.add('sel');
+
+        picks[idx] = btn.dataset.val;
+
+        if (idx < qs.length - 1) {
+          // Fade out current question, then show next
+          setTimeout(() => {
+            block.style.transition = 'opacity 0.4s ease-out';
+            block.style.opacity = '0';
+            setTimeout(() => {
+              block.style.display = 'none';
+              renderQuestion(idx + 1);
+              setTimeout(() => {
+                const next = document.getElementById(`q-${idx + 1}`);
+                if (next) next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 120);
+            }, 400);
+          }, 480);
+        } else {
+          setTimeout(() => runStep3(), 620);
+        }
+      });
+    });
+  }
+
+  /* ---- Step 3: result + Calendly ---- */
+  async function runStep3() {
+    showStep('step-3');
+    const wrap = document.getElementById('summary-wrap');
+    wrap.classList.add('in');
+
+    try {
+      const result = await fetchSummary();
+      const finalRoute = result.division || suggestedRoute || 'Flint';
+      showResult(finalRoute);
+      postIntake(result.triageLabel).catch(() => {});
+    } catch (err) {
+      showResult(suggestedRoute || 'Flint');
+      console.error('Summary error:', err);
+    }
+  }
+
+  function showResult(route) {
+    const nameBtn = document.getElementById('route-badge-name');
+    nameBtn.textContent = route;
+    const divKey = route === 'Forge + Fuel' ? 'forge'
+                 : route === 'Flint + Forge' ? 'flint'
+                 : route.toLowerCase();
+    nameBtn.onclick = () => openDivModal(divKey);
+
+    // Prefill Calendly link with name + email
+    const calendlyLink = document.getElementById('result-calendly');
+    if (calendlyLink) {
+      let baseUrl = calendlyLink.href.split('?')[0];
+      const params = new URLSearchParams();
+      if (userName) params.set('name', userName);
+      if (userEmail) params.set('email', userEmail);
+      if (userCompany) params.set('a1', userCompany);
+      const qs = params.toString();
+      calendlyLink.href = qs ? `${baseUrl}?${qs}` : baseUrl;
+    }
+  }
+
+  /* ---- API: Generate context line + confirmed route ---- */
+  async function fetchSummary() {
+    const key = API_KEY();
+
+    if (!key) {
+      // Demo mode: pass through the route detected during fetchQuestions
+      return {
+        triageLabel: `${suggestedRoute || 'Flint'} engagement`,
+        division: suggestedRoute || 'Flint',
+      };
+    }
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 350,
+        system: `You are a thoughtful intake specialist for Burnpiles. The three divisions are:\n- Flint: strategy/ideation — when the brief is unclear\n- Forge: build/prototype — Burnpiles owns the build end-to-end\n- Fuel: talent resourcing — Burnpiles places specialists, client manages the work\n\nBased on what someone wrote and how they answered two questions:\n1. Write one warm, direct, specific sentence acknowledging where they are (second person, not cheerleader-y — sounds like the opening of a real phone call).\n2. Confirm or adjust the suggested division route.\n3. Write a one-line internal triage label.\n\nReturn ONLY valid JSON:\n{"contextLine": "...", "division": "Flint|Forge|Fuel|Forge + Fuel|Flint + Forge", "triageLabel": "..."}`,
+        messages: [{
+          role: 'user',
+          content: `They wrote: "${userText}"\nSuggested route so far: ${suggestedRoute || 'unclear'}\nQ1: "${qs[0].question}" → "${picks[0]}"\nQ2: "${qs[1].question}" → "${picks[1]}"`
+        }]
+      })
+    });
+
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    const data = await res.json();
+    const text = data.content[0].text.trim();
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('Bad response');
+    return JSON.parse(match[0]);
+  }
+
+  /* ---- Splash screen ---- */
+  (function initSplash() {
+    const splash = document.getElementById('splash');
+    const splashCanvas = document.getElementById('splash-canvas');
+    if (!splash || !splashCanvas) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      splash.style.display = 'none';
+      return;
+    }
+    document.body.classList.add('splash-active');
+
+    // Force canvas dimensions to match viewport exactly
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    splashCanvas.width = W;
+    splashCanvas.height = H;
+    splashCanvas.style.width = W + 'px';
+    splashCanvas.style.height = H + 'px';
+
+    // Create a dedicated splash ember system (Fuel-level intensity)
+    const ctx = splashCanvas.getContext('2d');
+    const splashCfg = {
+      count: 500, speedMult: 1.6,
+      glowColor: 'rgba(240, 100, 20, 0.9)',
+      glowMid: 'rgba(220, 75, 15, 0.45)',
+      coreColor: 'rgba(255, 220, 110, 1)',
+      oscAmp: 0.5,
+      flameHeight: 0.5,
+      flameIntensity: 1.0,
+    };
+
+    // Spawn embers
+    function spawnEmber(scattered) {
+      return {
+        x: Math.random() * W,
+        y: scattered ? Math.random() * H : H + 10 + Math.random() * 20,
+        r: Math.random() * 1.5 + 0.4,
+        vy: -(Math.random() * 0.55 + 0.2) * splashCfg.speedMult,
+        vx: (Math.random() - 0.5) * 0.25,
+        osc: Math.random() * Math.PI * 2,
+        oSpd: Math.random() * 0.025 + 0.008,
+        oscAmp: splashCfg.oscAmp,
+        alp: Math.random() * 0.55 + 0.2,
+        life: 0,
+        max: Math.random() * 240 + 100,
+        curAlp: 0,
+      };
+    }
+
+    const embers = Array.from({ length: splashCfg.count }, () => {
+      const e = spawnEmber(true);
+      e.life = Math.random() * e.max;
+      return e;
+    });
+
+    let splashTime = 0;
+    let splashRunning = true;
+
+    function splashTick() {
+      if (!splashRunning) return;
+      ctx.clearRect(0, 0, W, H);
+
+      // Flame glow layers
+      splashTime += 0.015;
+      const fH = H * splashCfg.flameHeight;
+      const intensity = splashCfg.flameIntensity;
+
+      // Layer 1: deep base heat
+      const g1 = ctx.createLinearGradient(0, H, 0, H - fH);
+      g1.addColorStop(0, `rgba(140, 40, 5, ${0.22 * intensity})`);
+      g1.addColorStop(0.35, `rgba(120, 30, 3, ${0.08 * intensity})`);
+      g1.addColorStop(1, 'rgba(100, 20, 2, 0)');
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, H - fH, W, fH);
+
+      // Layer 2: mid glow
+      const midH = fH * (0.55 + 0.12 * Math.sin(splashTime * 0.8));
+      const g2 = ctx.createLinearGradient(0, H, 0, H - midH);
+      g2.addColorStop(0, `rgba(190, 65, 10, ${0.18 * intensity})`);
+      g2.addColorStop(0.3, `rgba(170, 50, 8, ${0.1 * intensity})`);
+      g2.addColorStop(1, 'rgba(150, 40, 5, 0)');
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, H - midH, W, midH);
+
+      // Layer 3: hot spots
+      for (let i = 0; i < 8; i++) {
+        const seed = i * 7.31;
+        const cx = W * ((i + 0.5) / 8) + Math.sin(splashTime * 0.6 + seed) * (W * 0.03);
+        const cy = H - fH * 0.05;
+        const spotR = fH * (0.25 + 0.15 * Math.sin(splashTime * (0.5 + i * 0.13) + seed));
+        const spotAlpha = (0.08 + 0.05 * Math.sin(splashTime * (0.7 + i * 0.1) + seed)) * intensity;
+        const g3 = ctx.createRadialGradient(cx, cy, 0, cx, cy, spotR);
+        g3.addColorStop(0, `rgba(220, 90, 15, ${spotAlpha})`);
+        g3.addColorStop(0.5, `rgba(180, 55, 8, ${spotAlpha * 0.4})`);
+        g3.addColorStop(1, 'rgba(150, 40, 5, 0)');
+        ctx.fillStyle = g3;
+        ctx.fillRect(cx - spotR, cy - spotR, spotR * 2, spotR * 2);
+      }
+
+      // Layer 4: ember line
+      const g4 = ctx.createLinearGradient(0, H, 0, H - 8);
+      g4.addColorStop(0, `rgba(240, 120, 30, ${0.15 * intensity})`);
+      g4.addColorStop(1, 'rgba(200, 70, 10, 0)');
+      ctx.fillStyle = g4;
+      ctx.fillRect(0, H - 8, W, 8);
+
+      // Draw embers
+      embers.forEach(e => {
+        e.osc += e.oSpd;
+        e.y += e.vy;
+        e.x += e.vx + Math.sin(e.osc) * e.oscAmp;
+        e.life++;
+        e.curAlp = e.alp * (1 - Math.pow(e.life / e.max, 1.8));
+        if (e.life >= e.max || e.y < -8) Object.assign(e, spawnEmber(false));
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, e.curAlp);
+        const g = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r * 3.5);
+        g.addColorStop(0, splashCfg.glowColor);
+        g.addColorStop(0.4, splashCfg.glowMid);
+        g.addColorStop(1, 'rgba(180, 50, 8, 0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = splashCfg.coreColor;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      requestAnimationFrame(splashTick);
+    }
+    requestAnimationFrame(splashTick);
+
+    setTimeout(() => {
+      splash.classList.add('done');
+      document.body.classList.remove('splash-active');
+      setTimeout(() => {
+        splashRunning = false;
+        splash.style.display = 'none';
+      }, 800);
+    }, 2800);
+  })();
+
+  /* ---- Save submission locally + POST to /api/intake ---- */
+  async function postIntake(triageLabel) {
+    const submission = {
+      name: userName,
+      company: userCompany,
+      email: userEmail,
+      input: userText,
+      question1: qs[0]?.question,
+      answer1: picks[0],
+      question2: qs[1]?.question,
+      answer2: picks[1],
+      route: suggestedRoute,
+      triageLabel,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Save to localStorage for admin viewing
+    try {
+      const subs = JSON.parse(localStorage.getItem('bp_submissions') || '[]');
+      subs.unshift(submission); // newest first
+      if (subs.length > 200) subs.length = 200; // cap at 200
+      localStorage.setItem('bp_submissions', JSON.stringify(subs));
+    } catch (e) { console.warn('Could not save submission:', e); }
+
+    // Fire-and-forget API post
+    fetch('/api/intake', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(submission)
+    }).catch(() => {});
+  }
+
+</script>
+</body>
+</html>
