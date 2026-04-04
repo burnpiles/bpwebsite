@@ -225,18 +225,14 @@
       overflow: hidden;
       background: #0c0b09;
     }
-    /* Hero background image (set via admin or JS) */
-    .hero-bg {
+    /* Hero background image — GIF only behind the divisions panels */
+    .hero-divisions::before {
+      content: '';
       position: absolute; inset: 0;
       z-index: 0;
-      overflow: hidden;
+      background: url('media/bpbackground.gif') center/cover no-repeat;
     }
-    .hero-bg img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .hero-bg::after {
+    .hero-divisions::after {
       content: '';
       position: absolute; inset: 0;
       background: rgba(12, 11, 9, 0.92);
@@ -436,6 +432,7 @@
 
     .hdiv {
       position: relative;
+      z-index: 2;
       overflow: hidden;
       padding: clamp(1.6rem, 3vw, 2.5rem) clamp(1.8rem, 3.5vw, 3rem) clamp(2rem, 4vh, 3rem);
       border-right: 1px solid var(--border);
@@ -1980,7 +1977,6 @@
       <span class="label">Our Services</span>
     </div>
     <div class="hero-divisions" aria-label="How we work">
-      <div class="hero-bg" id="hero-bg"><img src="media/bpbackground.gif" alt=""></div>
 
       <div class="hdiv" data-div="flint">
         <canvas class="hdiv-canvas" aria-hidden="true"></canvas>
