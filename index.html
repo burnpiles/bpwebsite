@@ -6,7 +6,10 @@
   <meta name="description" content="Burnpiles is a creative technology studio and AI/XR consultancy. We know what to burn.">
   <meta property="og:title" content="Burnpiles — Burn the noise. Keep the signal.">
   <meta property="og:description" content="Creative technology studio. AI & XR consultancy. We know what to burn.">
+  <meta property="og:image" content="https://burnpiles.com/og-image.svg">
   <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://burnpiles.com/og-image.svg">
   <title>Burnpiles — Burn the noise. Keep the signal.</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
 
@@ -489,8 +492,8 @@
         display: none;
       }
       .hdiv-pricing { display: none; }
-      /* Hero fills mobile viewport — top content centered, services at bottom */
-      #hero { min-height: 100svh; min-height: 100vh; display: flex; flex-direction: column; }
+      /* Hero fills mobile viewport — accounts for iOS browser chrome */
+      #hero { min-height: 100dvh; min-height: 100svh; display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom, 0); }
       .hero-top {
         flex: 1;
         display: flex; flex-direction: column;
@@ -511,8 +514,8 @@
       /* Flywheel fits one screen on mobile */
       #flywheel {
         padding-top: 1.5rem;
-        padding-bottom: 1rem;
-        min-height: 100svh; min-height: 100vh;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+        min-height: 100dvh; min-height: 100svh;
         display: flex; flex-direction: column; justify-content: center;
         box-sizing: border-box;
       }
@@ -2052,8 +2055,11 @@
 <section id="origin" aria-labelledby="origin-title">
   <div class="wrap">
     <div class="origin-layout reveal">
-      <div class="origin-media">
-        <img src="https://images.unsplash.com/photo-1563685965158-65cf13b735ea?w=600&h=450&fit=crop" alt="Burn pile — where the name comes from" style="width:100%;height:100%;object-fit:cover;display:block">
+      <div class="origin-media" id="origin-media">
+        <div class="origin-placeholder">
+          <span style="font-family:var(--font-display);font-size:2rem">🔥</span>
+          <span style="font-family:var(--font-mono);font-size:0.6rem;margin-top:0.4rem">Add photo in admin</span>
+        </div>
       </div>
       <div class="origin-content">
         <span class="label" id="origin-title">Where the name comes from</span>
