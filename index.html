@@ -1975,6 +1975,30 @@
     .footer-social a:hover { color: var(--text); border-color: var(--border-mid); }
     .footer-social a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
     .footer-social svg { width: 0.9rem; height: 0.9rem; fill: currentColor; }
+    .footer-origin {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      margin: 0 0 clamp(1.4rem, 3vh, 2rem);
+    }
+    .footer-origin img {
+      display: block;
+      width: 72px;
+      height: 90px;
+      object-fit: cover;
+      border: 1px solid var(--border-mid);
+      filter: saturate(0.85) brightness(0.9);
+      transition: filter 0.4s var(--ease-out);
+    }
+    .footer-origin:hover img { filter: none; }
+    .footer-origin figcaption {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
     .footer-copy {
       font-family: var(--font-body);
       font-size: 0.6rem;
@@ -1986,6 +2010,7 @@
       .footer-inner { flex-direction: column; align-items: center; text-align: center; }
       .footer-left { justify-content: center; }
       .footer-social { justify-content: center; }
+      .footer-origin { justify-content: center; }
     }
 
     /* =========================================
@@ -2340,6 +2365,13 @@
      ============================================================ -->
 <footer>
   <div class="wrap">
+    <figure class="footer-origin">
+      <picture>
+        <source srcset="media/original-burnpile.webp" type="image/webp">
+        <img src="media/original-burnpile.jpg" alt="A rusty steel barrel standing in snow, the original burnpile" width="72" height="90" loading="lazy" decoding="async">
+      </picture>
+      <figcaption>The original burnpile.</figcaption>
+    </figure>
     <div class="footer-inner">
       <div class="footer-left">
         <a href="mailto:hey@burnpiles.com" class="footer-email">hey@burnpiles.com</a>
